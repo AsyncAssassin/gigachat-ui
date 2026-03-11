@@ -1,0 +1,18 @@
+.wrapper {
+  height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 0 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+  background: var(--color-surface-elevated);
+}
+
+.wrapper input {
+  border: none;
+  outline: none;
+  background: transparent;
+  width: 100%;
+}

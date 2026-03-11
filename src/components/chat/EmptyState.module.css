@@ -1,0 +1,13 @@
+.state {
+  margin: auto;
+  text-align: center;
+  color: var(--color-text-muted);
+  display: grid;
+  gap: 8px;
+  place-items: center;
+}
+
+.state h3,
+.state p {
+  margin: 0;
+}

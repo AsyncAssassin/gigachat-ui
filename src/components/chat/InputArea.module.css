@@ -1,0 +1,29 @@
+.area {
+  border-top: 1px solid var(--color-border);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: end;
+  background: var(--color-surface);
+}
+
+.area textarea {
+  resize: none;
+  max-height: 120px;
+  border: 1px solid var(--color-border);
+  border-radius: 12px;
+  background: var(--color-surface-elevated);
+  padding: 9px 12px;
+  line-height: 1.5;
+}
+
+@media (max-width: 767px) {
+  .area {
+    grid-template-columns: auto 1fr auto;
+  }
+
+  .area > :nth-child(3) {
+    display: none;
+  }
+}

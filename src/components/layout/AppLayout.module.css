@@ -1,0 +1,48 @@
+.layout {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  background: radial-gradient(circle at 0 0, #dbeafe33, transparent 42%),
+    radial-gradient(circle at 100% 0, #ccfbf133, transparent 36%),
+    var(--color-bg);
+}
+
+.mobileTopbar {
+  display: none;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface);
+  padding: 8px 10px;
+  align-items: center;
+  gap: 10px;
+}
+
+.shell {
+  min-height: 0;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  grid-template-rows: minmax(0, 1fr);
+  overflow: hidden;
+}
+
+@media (max-width: 1023px) {
+  .shell {
+    grid-template-columns: 250px 1fr;
+  }
+}
+
+@media (max-width: 767px) {
+  .mobileTopbar {
+    display: flex;
+  }
+
+  .shell {
+    grid-template-columns: 1fr;
+  }
+
+  .shell > :first-child {
+    display: contents;
+  }
+}

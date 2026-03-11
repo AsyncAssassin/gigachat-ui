@@ -1,0 +1,11 @@
+.list {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 18px;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}

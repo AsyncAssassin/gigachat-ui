@@ -1,0 +1,16 @@
+.wrapper {
+  display: grid;
+  gap: 8px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+}
+
+.input {
+  width: 100%;
+  accent-color: var(--color-primary);
+}

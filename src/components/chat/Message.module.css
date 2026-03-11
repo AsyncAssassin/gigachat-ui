@@ -1,0 +1,113 @@
+.row {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+
+.row[data-role='user'] {
+  justify-content: flex-end;
+}
+
+.row[data-role='assistant'] {
+  justify-content: flex-start;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.bubble {
+  position: relative;
+  background: var(--color-assistant-message-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+  padding: 10px 12px;
+  min-width: 0;
+  max-width: min(760px, calc(100% - 44px));
+  overflow: hidden;
+}
+
+.row[data-role='user'] .bubble {
+  background: var(--color-user-message-bg);
+  max-width: min(760px, 100%);
+}
+
+.meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+  min-width: 0;
+}
+
+.meta strong {
+  font-size: 0.86rem;
+  min-width: 0;
+}
+
+.meta span {
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+  flex-shrink: 0;
+}
+
+.markdown {
+  line-height: 1.5;
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+
+.markdown :is(p, ul, ol, pre) {
+  margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.markdown :is(ul, ol) {
+  padding-left: 20px;
+}
+
+.markdown pre {
+  background: color-mix(in srgb, var(--color-bg) 70%, #0000);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.markdown code {
+  font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, monospace;
+  font-size: 0.86rem;
+}
+
+.copyBtn {
+  position: absolute;
+  right: 8px;
+  bottom: 8px;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.bubble:hover .copyBtn,
+.bubble:focus-within .copyBtn {
+  opacity: 1;
+}
+
+@media (max-width: 767px) {
+  .row {
+    gap: 8px;
+  }
+
+  .row[data-role='assistant'] .bubble {
+    max-width: calc(100% - 42px);
+  }
+}

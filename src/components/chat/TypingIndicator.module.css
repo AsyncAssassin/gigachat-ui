@@ -1,0 +1,52 @@
+.wrapper {
+  display: flex;
+  gap: 10px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: var(--color-surface-elevated);
+  border: 1px solid var(--color-border);
+}
+
+.bubble {
+  border-radius: 14px;
+  border: 1px solid var(--color-border);
+  background: var(--color-assistant-message-bg);
+  padding: 12px;
+  display: flex;
+  gap: 6px;
+}
+
+.bubble span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--color-text-muted);
+  animation: pulse 1.2s infinite ease-in-out;
+}
+
+.bubble span:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.bubble span:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes pulse {
+  0%,
+  80%,
+  100% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

@@ -1,0 +1,76 @@
+import { Menu } from 'lucide-react'
+import type { Chat, Message } from '../../types/chat'
+import { ChatWindow } from '../chat/ChatWindow'
+import { Sidebar } from '../sidebar/Sidebar'
+import { Button } from '../ui/Button'
+import styles from './AppLayout.module.css'
+
+interface AppLayoutProps {
+  chats: Chat[]
+  activeChatId: string | null
+  activeChat: Chat | null
+  messages: Message[]
+  isTyping: boolean
+  isSidebarOpen: boolean
+  onOpenSidebar: () => void
+  onCloseSidebar: () => void
+  onSelectChat: (chatId: string) => void
+  onCreateChat: () => void
+  onEditChat: (chatId: string) => void
+  onDeleteChat: (chatId: string) => void
+  onSendMessage: (text: string) => void
+  onOpenSettings: () => void
+}
+
+export function AppLayout({
+  chats,
+  activeChatId,
+  activeChat,
+  messages,
+  isTyping,
+  isSidebarOpen,
+  onOpenSidebar,
+  onCloseSidebar,
+  onSelectChat,
+  onCreateChat,
+  onEditChat,
+  onDeleteChat,
+  onSendMessage,
+  onOpenSettings,
+}: AppLayoutProps) {
+  return (
+    <main className={styles.layout}>
+      <div className={styles.mobileTopbar}>
+        <Button
+          variant="secondary"
+          iconOnly
+          icon={<Menu size={16} />}
+          aria-label="Открыть меню"
+          onClick={onOpenSidebar}
+        />
+        <strong>GigaChat UI</strong>
+      </div>
+
+      <div className={styles.shell}>
+        <Sidebar
+          chats={chats}
+          activeChatId={activeChatId}
+          isMobileOpen={isSidebarOpen}
+          onCloseMobile={onCloseSidebar}
+          onSelectChat={onSelectChat}
+          onCreateChat={onCreateChat}
+          onEditChat={onEditChat}
+          onDeleteChat={onDeleteChat}
+        />
+
+        <ChatWindow
+          chat={activeChat}
+          messages={messages}
+          isTyping={isTyping}
+          onOpenSettings={onOpenSettings}
+          onSendMessage={onSendMessage}
+        />
+      </div>
+    </main>
+  )
+}
