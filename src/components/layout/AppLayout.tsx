@@ -60,7 +60,6 @@ export function AppLayout({
         />
 
         <ChatWindow
-          key={activeChat?.id ?? 'chat-empty'}
           chat={activeChat}
           onOpenSettings={onOpenSettings}
           onChatPreviewChange={onChatPreviewChange}

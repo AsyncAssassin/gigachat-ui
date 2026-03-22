@@ -31,20 +31,27 @@ function createAssistantReply(prompt: string): string {
 }
 
 export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWindowProps) {
-  const [messages, setMessages] = useState<Message[]>([])
-  const [isLoading, setIsLoading] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [messagesByChat, setMessagesByChat] = useState<Record<string, Message[]>>({})
+  const [isLoadingByChat, setIsLoadingByChat] = useState<Record<string, boolean>>({})
+  const timeoutByChatRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+
+  const activeChatId = chat?.id ?? null
+  const messages = activeChatId ? messagesByChat[activeChatId] ?? [] : []
+  const isLoading = activeChatId ? isLoadingByChat[activeChatId] ?? false : false
 
   useEffect(() => {
+    const timeoutStore = timeoutByChatRef
+
     return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+      const pendingTimeouts = Object.values(timeoutStore.current)
+      for (const timeoutId of pendingTimeouts) {
+        clearTimeout(timeoutId)
       }
     }
   }, [])
 
   const handleSendMessage = (text: string) => {
-    if (!chat || isLoading) {
+    if (!activeChatId || isLoading) {
       return
     }
 
@@ -55,13 +62,24 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
       timestamp: new Date().toISOString(),
     }
 
-    setMessages((prev) => [...prev, userMessage])
-    onChatPreviewChange?.(chat.id, userMessage.content, userMessage.timestamp)
-    setIsLoading(true)
+    setMessagesByChat((prev) => ({
+      ...prev,
+      [activeChatId]: [...(prev[activeChatId] ?? []), userMessage],
+    }))
+    onChatPreviewChange?.(activeChatId, userMessage.content, userMessage.timestamp)
+    setIsLoadingByChat((prev) => ({
+      ...prev,
+      [activeChatId]: true,
+    }))
 
     const delayMs = 1000 + Math.floor(Math.random() * 1000)
 
-    timeoutRef.current = setTimeout(() => {
+    const existingTimeout = timeoutByChatRef.current[activeChatId]
+    if (existingTimeout) {
+      clearTimeout(existingTimeout)
+    }
+
+    timeoutByChatRef.current[activeChatId] = setTimeout(() => {
       const assistantMessage: Message = {
         id: generateId(),
         role: 'assistant',
@@ -69,10 +87,16 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
         timestamp: new Date().toISOString(),
       }
 
-      setMessages((prev) => [...prev, assistantMessage])
-      onChatPreviewChange?.(chat.id, assistantMessage.content, assistantMessage.timestamp)
-      setIsLoading(false)
-      timeoutRef.current = null
+      setMessagesByChat((prev) => ({
+        ...prev,
+        [activeChatId]: [...(prev[activeChatId] ?? []), assistantMessage],
+      }))
+      onChatPreviewChange?.(activeChatId, assistantMessage.content, assistantMessage.timestamp)
+      setIsLoadingByChat((prev) => ({
+        ...prev,
+        [activeChatId]: false,
+      }))
+      delete timeoutByChatRef.current[activeChatId]
     }, delayMs)
   }
 
