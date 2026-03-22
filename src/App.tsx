@@ -1,25 +1,30 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { AuthForm } from './components/auth/AuthForm'
 import { AppLayout } from './components/layout/AppLayout'
 import { SettingsPanel } from './components/settings/SettingsPanel'
-import { mockChats } from './mocks/chats'
-import { defaultSettings } from './mocks/settings'
-import type { Chat } from './types/chat'
-import type { ThemeMode } from './types/common'
 import type { ChatSettings } from './types/settings'
+import { selectActiveChat, useChatStore } from './store/chatStore'
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [chats, setChats] = useState<Chat[]>(mockChats)
-  const [activeChatId, setActiveChatId] = useState<string | null>(mockChats[0]?.id ?? null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [settings, setSettings] = useState<ChatSettings>(defaultSettings)
-  const [theme, setTheme] = useState<ThemeMode>(defaultSettings.theme)
+
+  const chats = useChatStore((state) => state.chats)
+  const activeChatId = useChatStore((state) => state.activeChatId)
+  const activeChat = useChatStore(selectActiveChat)
+  const settings = useChatStore((state) => state.settings)
+
+  const createChat = useChatStore((state) => state.createChat)
+  const selectChat = useChatStore((state) => state.selectChat)
+  const renameChat = useChatStore((state) => state.renameChat)
+  const deleteChat = useChatStore((state) => state.deleteChat)
+  const setSettings = useChatStore((state) => state.setSettings)
+  const resetSettings = useChatStore((state) => state.resetSettings)
 
   useEffect(() => {
-    document.documentElement.setAttribute('data-theme', theme)
-  }, [theme])
+    document.documentElement.setAttribute('data-theme', settings.theme)
+  }, [settings.theme])
 
   useEffect(() => {
     const isOverlayOpen = isSidebarOpen || isSettingsOpen
@@ -40,73 +45,30 @@ export default function App() {
     }
   }, [isSidebarOpen, isSettingsOpen])
 
-  const activeChat = useMemo(
-    () => chats.find((chat) => chat.id === activeChatId) ?? null,
-    [chats, activeChatId],
-  )
-
   const handleLogin = () => {
     setIsAuthenticated(true)
   }
 
   const handleCreateChat = () => {
-    const chatId = `chat-${crypto.randomUUID()}`
-    const newChat: Chat = {
-      id: chatId,
-      title: 'Новый чат',
-      lastMessage: 'Начните новый диалог',
-      lastMessageAt: new Date().toISOString(),
-    }
-
-    setChats((prev) => [newChat, ...prev])
-    setActiveChatId(chatId)
+    createChat()
     setIsSidebarOpen(false)
   }
 
   const handleDeleteChat = (chatId: string) => {
-    setChats((prev) => {
-      const nextChats = prev.filter((chat) => chat.id !== chatId)
-
-      if (activeChatId === chatId) {
-        setActiveChatId(nextChats[0]?.id ?? null)
-      }
-
-      return nextChats
-    })
+    deleteChat(chatId)
   }
 
   const handleEditChat = (chatId: string) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId ? { ...chat, title: `${chat.title} (edited)` } : chat,
-      ),
-    )
-  }
-
-  const handleChatPreviewChange = (chatId: string, lastMessage: string, timestamp: string) => {
-    setChats((prev) =>
-      prev.map((chat) =>
-        chat.id === chatId
-          ? {
-              ...chat,
-              lastMessage,
-              lastMessageAt: timestamp,
-            }
-          : chat,
-      ),
-    )
+    renameChat(chatId)
   }
 
   const handleSaveSettings = (nextSettings: ChatSettings) => {
     setSettings(nextSettings)
-    setTheme(nextSettings.theme)
     setIsSettingsOpen(false)
   }
 
   const handleResetSettings = (): ChatSettings => {
-    setSettings(defaultSettings)
-    setTheme(defaultSettings.theme)
-    return defaultSettings
+    return resetSettings()
   }
 
   if (!isAuthenticated) {
@@ -123,14 +85,13 @@ export default function App() {
         onOpenSidebar={() => setIsSidebarOpen(true)}
         onCloseSidebar={() => setIsSidebarOpen(false)}
         onSelectChat={(chatId) => {
-          setActiveChatId(chatId)
+          selectChat(chatId)
           setIsSidebarOpen(false)
         }}
         onCreateChat={handleCreateChat}
         onDeleteChat={handleDeleteChat}
         onEditChat={handleEditChat}
         onOpenSettings={() => setIsSettingsOpen(true)}
-        onChatPreviewChange={handleChatPreviewChange}
       />
       {isSettingsOpen ? (
         <SettingsPanel

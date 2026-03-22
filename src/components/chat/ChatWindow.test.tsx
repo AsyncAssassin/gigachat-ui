@@ -1,4 +1,5 @@
 import { act, fireEvent, render, screen } from '@testing-library/react'
+import { useChatStore } from '../../store/chatStore'
 import type { Chat } from '../../types/chat'
 import { ChatWindow } from './ChatWindow'
 
@@ -30,22 +31,21 @@ function sendMessage(text: string) {
 
 describe('ChatWindow', () => {
   beforeEach(() => {
+    useChatStore.getState().resetChatState()
     vi.useFakeTimers()
   })
 
   afterEach(() => {
     vi.runOnlyPendingTimers()
     vi.useRealTimers()
+    useChatStore.getState().resetChatState()
   })
 
   it('keeps messages isolated by chat when switching during loading', () => {
-    const onChatPreviewChange = vi.fn()
-
     const { rerender } = render(
       <ChatWindow
         chat={chatOne}
         onOpenSettings={vi.fn()}
-        onChatPreviewChange={onChatPreviewChange}
       />,
     )
 
@@ -57,7 +57,6 @@ describe('ChatWindow', () => {
       <ChatWindow
         chat={chatTwo}
         onOpenSettings={vi.fn()}
-        onChatPreviewChange={onChatPreviewChange}
       />,
     )
 
@@ -76,7 +75,6 @@ describe('ChatWindow', () => {
       <ChatWindow
         chat={chatOne}
         onOpenSettings={vi.fn()}
-        onChatPreviewChange={onChatPreviewChange}
       />,
     )
 
@@ -88,15 +86,12 @@ describe('ChatWindow', () => {
       <ChatWindow
         chat={chatTwo}
         onOpenSettings={vi.fn()}
-        onChatPreviewChange={onChatPreviewChange}
       />,
     )
 
     expect(screen.getByText('second message')).toBeInTheDocument()
     expect(screen.getByText(/Принял: "second message"/)).toBeInTheDocument()
     expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeEnabled()
-
-    expect(onChatPreviewChange).toHaveBeenCalledTimes(4)
   })
 
   it('stops assistant generation for the active chat', () => {
@@ -104,7 +99,6 @@ describe('ChatWindow', () => {
       <ChatWindow
         chat={chatOne}
         onOpenSettings={vi.fn()}
-        onChatPreviewChange={vi.fn()}
       />,
     )
 

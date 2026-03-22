@@ -17,7 +17,6 @@ interface AppLayoutProps {
   onEditChat: (chatId: string) => void
   onDeleteChat: (chatId: string) => void
   onOpenSettings: () => void
-  onChatPreviewChange: (chatId: string, lastMessage: string, timestamp: string) => void
 }
 
 export function AppLayout({
@@ -32,7 +31,6 @@ export function AppLayout({
   onEditChat,
   onDeleteChat,
   onOpenSettings,
-  onChatPreviewChange,
 }: AppLayoutProps) {
   return (
     <main className={styles.layout}>
@@ -62,7 +60,6 @@ export function AppLayout({
         <ChatWindow
           chat={activeChat}
           onOpenSettings={onOpenSettings}
-          onChatPreviewChange={onChatPreviewChange}
         />
       </div>
     </main>
