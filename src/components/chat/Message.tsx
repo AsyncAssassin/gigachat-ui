@@ -1,4 +1,5 @@
-import { Copy } from 'lucide-react'
+import { useEffect, useRef, useState } from 'react'
+import { Check, Copy } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
 import type { Message as MessageType } from '../../types/message'
@@ -15,10 +16,34 @@ interface MessageProps {
 export function Message({ message, variant }: MessageProps) {
   const resolvedVariant: MessageVariant = variant ?? message.role
   const isUser = resolvedVariant === 'user'
+  const [isCopied, setIsCopied] = useState(false)
+  const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copiedTimerRef.current) {
+        clearTimeout(copiedTimerRef.current)
+      }
+    }
+  }, [])
 
   const handleCopy = async () => {
+    if (isUser) {
+      return
+    }
+
     try {
       await navigator.clipboard.writeText(message.content)
+      setIsCopied(true)
+
+      if (copiedTimerRef.current) {
+        clearTimeout(copiedTimerRef.current)
+      }
+
+      copiedTimerRef.current = setTimeout(() => {
+        setIsCopied(false)
+        copiedTimerRef.current = null
+      }, 2000)
     } catch {
       // Ignore clipboard errors in unsupported environments.
     }
@@ -38,15 +63,17 @@ export function Message({ message, variant }: MessageProps) {
           <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.content}</ReactMarkdown>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          icon={<Copy size={14} />}
-          className={styles.copyBtn}
-          onClick={handleCopy}
-        >
-          Копировать
-        </Button>
+        {!isUser ? (
+          <Button
+            variant={isCopied ? 'secondary' : 'ghost'}
+            size="sm"
+            icon={isCopied ? <Check size={14} /> : <Copy size={14} />}
+            className={styles.copyBtn}
+            onClick={handleCopy}
+          >
+            {isCopied ? 'Скопировано' : 'Копировать'}
+          </Button>
+        ) : null}
       </div>
     </article>
   )

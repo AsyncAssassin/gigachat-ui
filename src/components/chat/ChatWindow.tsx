@@ -100,6 +100,23 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
     }, delayMs)
   }
 
+  const handleStopGeneration = () => {
+    if (!activeChatId) {
+      return
+    }
+
+    const activeTimeout = timeoutByChatRef.current[activeChatId]
+    if (activeTimeout) {
+      clearTimeout(activeTimeout)
+      delete timeoutByChatRef.current[activeChatId]
+    }
+
+    setIsLoadingByChat((prev) => ({
+      ...prev,
+      [activeChatId]: false,
+    }))
+  }
+
   return (
     <section className={styles.window}>
       <header className={styles.header}>
@@ -130,7 +147,12 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
       </div>
 
       <div className={styles.footer}>
-        <InputArea disabled={!chat} isLoading={isLoading} onSend={handleSendMessage} />
+        <InputArea
+          disabled={!chat}
+          isLoading={isLoading}
+          onSend={handleSendMessage}
+          onStop={handleStopGeneration}
+        />
       </div>
     </section>
   )

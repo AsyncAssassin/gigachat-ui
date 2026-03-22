@@ -6,6 +6,7 @@
   grid-template-columns: auto 1fr auto;
   align-items: end;
   background: var(--color-surface);
+  width: 100%;
 }
 
 .area textarea {
@@ -16,6 +17,11 @@
   background: var(--color-surface-elevated);
   padding: 9px 12px;
   line-height: 1.5;
+}
+
+.actionBtn {
+  min-width: 40px;
+  min-height: 40px;
 }
 
 @media (max-width: 767px) {

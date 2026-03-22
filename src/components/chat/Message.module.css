@@ -102,6 +102,12 @@
   opacity: 1;
 }
 
+@media (hover: none) {
+  .copyBtn {
+    opacity: 1;
+  }
+}
+
 @media (max-width: 767px) {
   .row {
     gap: 8px;
