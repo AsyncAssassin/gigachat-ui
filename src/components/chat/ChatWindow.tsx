@@ -1,7 +1,12 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { Settings } from 'lucide-react'
 import type { Chat } from '../../types/chat'
 import type { Message } from '../../types/message'
+import {
+  selectLoadingForChat,
+  selectMessagesForChat,
+  useChatStore,
+} from '../../store/chatStore'
 import { Button } from '../ui/Button'
 import { EmptyState } from './EmptyState'
 import { InputArea } from './InputArea'
@@ -11,7 +16,6 @@ import styles from './ChatWindow.module.css'
 interface ChatWindowProps {
   chat: Chat | null
   onOpenSettings: () => void
-  onChatPreviewChange?: (chatId: string, lastMessage: string, timestamp: string) => void
 }
 
 function generateId(): string {
@@ -30,14 +34,16 @@ function createAssistantReply(prompt: string): string {
   ].join('\n')
 }
 
-export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWindowProps) {
-  const [messagesByChat, setMessagesByChat] = useState<Record<string, Message[]>>({})
-  const [isLoadingByChat, setIsLoadingByChat] = useState<Record<string, boolean>>({})
+export function ChatWindow({ chat, onOpenSettings }: ChatWindowProps) {
   const timeoutByChatRef = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
   const activeChatId = chat?.id ?? null
-  const messages = activeChatId ? messagesByChat[activeChatId] ?? [] : []
-  const isLoading = activeChatId ? isLoadingByChat[activeChatId] ?? false : false
+  const messages = useChatStore(selectMessagesForChat(activeChatId))
+  const isLoading = useChatStore(selectLoadingForChat(activeChatId))
+
+  const addMessage = useChatStore((state) => state.addMessage)
+  const setChatLoading = useChatStore((state) => state.setChatLoading)
+  const updateChatPreview = useChatStore((state) => state.updateChatPreview)
 
   useEffect(() => {
     const timeoutStore = timeoutByChatRef
@@ -55,6 +61,7 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
       return
     }
 
+    const currentChatId = activeChatId
     const userMessage: Message = {
       id: generateId(),
       role: 'user',
@@ -62,24 +69,18 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
       timestamp: new Date().toISOString(),
     }
 
-    setMessagesByChat((prev) => ({
-      ...prev,
-      [activeChatId]: [...(prev[activeChatId] ?? []), userMessage],
-    }))
-    onChatPreviewChange?.(activeChatId, userMessage.content, userMessage.timestamp)
-    setIsLoadingByChat((prev) => ({
-      ...prev,
-      [activeChatId]: true,
-    }))
+    addMessage(currentChatId, userMessage)
+    updateChatPreview(currentChatId, userMessage.content, userMessage.timestamp)
+    setChatLoading(currentChatId, true)
 
     const delayMs = 1000 + Math.floor(Math.random() * 1000)
 
-    const existingTimeout = timeoutByChatRef.current[activeChatId]
+    const existingTimeout = timeoutByChatRef.current[currentChatId]
     if (existingTimeout) {
       clearTimeout(existingTimeout)
     }
 
-    timeoutByChatRef.current[activeChatId] = setTimeout(() => {
+    timeoutByChatRef.current[currentChatId] = setTimeout(() => {
       const assistantMessage: Message = {
         id: generateId(),
         role: 'assistant',
@@ -87,16 +88,10 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
         timestamp: new Date().toISOString(),
       }
 
-      setMessagesByChat((prev) => ({
-        ...prev,
-        [activeChatId]: [...(prev[activeChatId] ?? []), assistantMessage],
-      }))
-      onChatPreviewChange?.(activeChatId, assistantMessage.content, assistantMessage.timestamp)
-      setIsLoadingByChat((prev) => ({
-        ...prev,
-        [activeChatId]: false,
-      }))
-      delete timeoutByChatRef.current[activeChatId]
+      addMessage(currentChatId, assistantMessage)
+      updateChatPreview(currentChatId, assistantMessage.content, assistantMessage.timestamp)
+      setChatLoading(currentChatId, false)
+      delete timeoutByChatRef.current[currentChatId]
     }, delayMs)
   }
 
@@ -111,10 +106,7 @@ export function ChatWindow({ chat, onOpenSettings, onChatPreviewChange }: ChatWi
       delete timeoutByChatRef.current[activeChatId]
     }
 
-    setIsLoadingByChat((prev) => ({
-      ...prev,
-      [activeChatId]: false,
-    }))
+    setChatLoading(activeChatId, false)
   }
 
   return (
