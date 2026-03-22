@@ -98,4 +98,28 @@ describe('ChatWindow', () => {
 
     expect(onChatPreviewChange).toHaveBeenCalledTimes(4)
   })
+
+  it('stops assistant generation for the active chat', () => {
+    render(
+      <ChatWindow
+        chat={chatOne}
+        onOpenSettings={vi.fn()}
+        onChatPreviewChange={vi.fn()}
+      />,
+    )
+
+    sendMessage('stop me')
+
+    const stopButton = screen.getByRole('button', { name: 'Остановить генерацию' })
+    fireEvent.click(stopButton)
+
+    act(() => {
+      vi.advanceTimersByTime(2100)
+    })
+
+    expect(screen.getByText('stop me')).toBeInTheDocument()
+    expect(screen.queryByText(/Принял: "stop me"/)).not.toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Отправить сообщение' })).toBeInTheDocument()
+  })
 })
