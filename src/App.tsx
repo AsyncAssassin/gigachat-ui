@@ -3,24 +3,17 @@ import { AuthForm } from './components/auth/AuthForm'
 import { AppLayout } from './components/layout/AppLayout'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import { mockChats } from './mocks/chats'
-import { mockMessages } from './mocks/messages'
 import { defaultSettings } from './mocks/settings'
-import type { Chat, Message } from './types/chat'
+import type { Chat } from './types/chat'
 import type { ThemeMode } from './types/common'
 import type { ChatSettings } from './types/settings'
-
-function createAssistantReply(prompt: string): string {
-  return `Понял запрос: **${prompt.slice(0, 80)}**\n\nВот быстрый ответ:\n- я учёл контекст чата\n- сформировал короткий план\n- могу продолжить подробнее по пунктам`;
-}
 
 export default function App() {
   const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [chats, setChats] = useState<Chat[]>(mockChats)
-  const [messages, setMessages] = useState<Message[]>(mockMessages)
   const [activeChatId, setActiveChatId] = useState<string | null>(mockChats[0]?.id ?? null)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
-  const [isTyping, setIsTyping] = useState(false)
   const [settings, setSettings] = useState<ChatSettings>(defaultSettings)
   const [theme, setTheme] = useState<ThemeMode>(defaultSettings.theme)
 
@@ -52,11 +45,6 @@ export default function App() {
     [chats, activeChatId],
   )
 
-  const activeMessages = useMemo(
-    () => messages.filter((message) => message.chatId === activeChatId),
-    [messages, activeChatId],
-  )
-
   const handleLogin = () => {
     setIsAuthenticated(true)
   }
@@ -76,13 +64,15 @@ export default function App() {
   }
 
   const handleDeleteChat = (chatId: string) => {
-    setChats((prev) => prev.filter((chat) => chat.id !== chatId))
-    setMessages((prev) => prev.filter((message) => message.chatId !== chatId))
+    setChats((prev) => {
+      const nextChats = prev.filter((chat) => chat.id !== chatId)
 
-    if (activeChatId === chatId) {
-      const nextChat = chats.find((chat) => chat.id !== chatId)
-      setActiveChatId(nextChat?.id ?? null)
-    }
+      if (activeChatId === chatId) {
+        setActiveChatId(nextChats[0]?.id ?? null)
+      }
+
+      return nextChats
+    })
   }
 
   const handleEditChat = (chatId: string) => {
@@ -93,57 +83,18 @@ export default function App() {
     )
   }
 
-  const handleSendMessage = (text: string) => {
-    if (!activeChatId) return
-
-    const userMessage: Message = {
-      id: `msg-${crypto.randomUUID()}`,
-      chatId: activeChatId,
-      role: 'user',
-      senderName: 'Вы',
-      content: text,
-      createdAt: new Date().toISOString(),
-    }
-
-    setMessages((prev) => [...prev, userMessage])
+  const handleChatPreviewChange = (chatId: string, lastMessage: string, timestamp: string) => {
     setChats((prev) =>
       prev.map((chat) =>
-        chat.id === activeChatId
+        chat.id === chatId
           ? {
               ...chat,
-              lastMessage: text,
-              lastMessageAt: new Date().toISOString(),
+              lastMessage,
+              lastMessageAt: timestamp,
             }
           : chat,
       ),
     )
-
-    setIsTyping(true)
-    window.setTimeout(() => {
-      const answer = createAssistantReply(text)
-      const assistantMessage: Message = {
-        id: `msg-${crypto.randomUUID()}`,
-        chatId: activeChatId,
-        role: 'assistant',
-        senderName: 'GigaChat',
-        content: answer,
-        createdAt: new Date().toISOString(),
-      }
-
-      setMessages((prev) => [...prev, assistantMessage])
-      setChats((prev) =>
-        prev.map((chat) =>
-          chat.id === activeChatId
-            ? {
-                ...chat,
-                lastMessage: answer,
-                lastMessageAt: new Date().toISOString(),
-              }
-            : chat,
-        ),
-      )
-      setIsTyping(false)
-    }, 900)
   }
 
   const handleSaveSettings = (nextSettings: ChatSettings) => {
@@ -168,8 +119,6 @@ export default function App() {
         chats={chats}
         activeChatId={activeChatId}
         activeChat={activeChat}
-        messages={activeMessages}
-        isTyping={isTyping}
         isSidebarOpen={isSidebarOpen}
         onOpenSidebar={() => setIsSidebarOpen(true)}
         onCloseSidebar={() => setIsSidebarOpen(false)}
@@ -180,8 +129,8 @@ export default function App() {
         onCreateChat={handleCreateChat}
         onDeleteChat={handleDeleteChat}
         onEditChat={handleEditChat}
-        onSendMessage={handleSendMessage}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        onChatPreviewChange={handleChatPreviewChange}
       />
       {isSettingsOpen ? (
         <SettingsPanel

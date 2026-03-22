@@ -1,7 +1,7 @@
 import { Copy } from 'lucide-react'
 import ReactMarkdown from 'react-markdown'
 import remarkGfm from 'remark-gfm'
-import type { Message as MessageType } from '../../types/chat'
+import type { Message as MessageType } from '../../types/message'
 import { Button } from '../ui/Button'
 import styles from './Message.module.css'
 
@@ -30,8 +30,8 @@ export function Message({ message, variant }: MessageProps) {
 
       <div className={styles.bubble}>
         <div className={styles.meta}>
-          <strong>{message.senderName}</strong>
-          <span>{new Date(message.createdAt).toLocaleTimeString('ru-RU')}</span>
+          <strong>{isUser ? 'Вы' : 'Ассистент'}</strong>
+          <span>{new Date(message.timestamp).toLocaleTimeString('ru-RU')}</span>
         </div>
 
         <div className={styles.markdown}>

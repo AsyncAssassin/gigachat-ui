@@ -1,16 +1,16 @@
 import { useEffect, useRef, useState } from 'react'
-import { Paperclip, SendHorizontal, Square } from 'lucide-react'
+import { Paperclip, SendHorizontal } from 'lucide-react'
 import { autoSizeTextarea } from '../../utils/textareaAutoSize'
 import { Button } from '../ui/Button'
 import styles from './InputArea.module.css'
 
 interface InputAreaProps {
   disabled?: boolean
+  isLoading: boolean
   onSend: (text: string) => void
-  onStop: () => void
 }
 
-export function InputArea({ disabled = false, onSend, onStop }: InputAreaProps) {
+export function InputArea({ disabled = false, isLoading, onSend }: InputAreaProps) {
   const [text, setText] = useState('')
   const textareaRef = useRef<HTMLTextAreaElement | null>(null)
 
@@ -22,26 +22,39 @@ export function InputArea({ disabled = false, onSend, onStop }: InputAreaProps) 
 
   const submit = () => {
     const nextText = text.trim()
-    if (!nextText || disabled) return
+
+    if (!nextText || disabled || isLoading) {
+      return
+    }
+
     onSend(nextText)
     setText('')
   }
 
+  const isSubmitDisabled = disabled || isLoading || !text.trim()
+
   return (
-    <div className={styles.area}>
+    <form
+      className={styles.area}
+      onSubmit={(event) => {
+        event.preventDefault()
+        submit()
+      }}
+    >
       <Button
         variant="ghost"
         iconOnly
         icon={<Paperclip size={16} />}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         aria-label="Прикрепить файл"
+        type="button"
       />
 
       <textarea
         ref={textareaRef}
         rows={1}
         value={text}
-        disabled={disabled}
+        disabled={disabled || isLoading}
         placeholder="Напишите сообщение..."
         onChange={(event) => setText(event.target.value)}
         onKeyDown={(event) => {
@@ -53,21 +66,12 @@ export function InputArea({ disabled = false, onSend, onStop }: InputAreaProps) 
       />
 
       <Button
-        variant="secondary"
-        iconOnly
-        icon={<Square size={14} />}
-        aria-label="Остановить ответ"
-        disabled
-        onClick={onStop}
-      />
-
-      <Button
         iconOnly
         icon={<SendHorizontal size={16} />}
         aria-label="Отправить сообщение"
-        disabled={disabled || !text.trim()}
-        onClick={submit}
+        disabled={isSubmitDisabled}
+        type="submit"
       />
-    </div>
+    </form>
   )
 }
