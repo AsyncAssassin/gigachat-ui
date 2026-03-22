@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import type { Message as MessageType } from '../../types/chat'
+import type { Message as MessageType } from '../../types/message'
 import { Message } from './Message'
 import { TypingIndicator } from './TypingIndicator'
 import styles from './MessageList.module.css'
@@ -14,12 +14,16 @@ export function MessageList({ messages, isTyping }: MessageListProps) {
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages, isTyping])
+  }, [messages])
 
   return (
     <div className={styles.list}>
       {messages.map((message) => (
-        <Message key={message.id} message={message} variant={message.role} />
+        <Message
+          key={message.id}
+          message={message}
+          variant={message.role === 'user' ? 'user' : 'assistant'}
+        />
       ))}
 
       <TypingIndicator isVisible={isTyping} />
