@@ -70,7 +70,32 @@ npm run test
 npm run test:watch
 npm run build
 npm run preview
+npm run security:secrets
+npm run security:secrets:staged
 ```
+
+## Security Baseline
+
+В репозитории запрещено хранить реальные секреты.
+
+- используйте только локальные `.env`/`server/.env` (они игнорируются git)
+- храните в git только шаблоны `.env.example`
+- включите pre-commit hook для сканирования staged файлов:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+Для локального сканирования секретов используется `gitleaks`.
+Если `gitleaks` не установлен локально, скрипт автоматически использует Docker-образ.
+
+Пример установки на macOS:
+
+```bash
+brew install gitleaks
+```
+
+Подробная политика и процесс ротации ключей: [SECURITY.md](./SECURITY.md)
 
 ## Ограничения текущего этапа
 
