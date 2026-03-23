@@ -1,11 +1,12 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { createGigaChatCompletion } from '../../api/gigachat'
+import { createGigaChatCompletion, streamGigaChatCompletion } from '../../api/gigachat'
 import { useChatStore } from '../../store/chatStore'
 import type { Chat } from '../../types/chat'
 import { ChatWindow } from './ChatWindow'
 
 vi.mock('../../api/gigachat', () => ({
   createGigaChatCompletion: vi.fn(),
+  streamGigaChatCompletion: vi.fn(),
   extractAssistantTextFromCompletion: (payload: unknown) => {
     const source = payload as {
       choices?: Array<{ message?: { content?: string } }>
@@ -36,6 +37,7 @@ function sendMessage(text: string) {
 
 describe('ChatWindow', () => {
   const mockCreateCompletion = vi.mocked(createGigaChatCompletion)
+  const mockStreamCompletion = vi.mocked(streamGigaChatCompletion)
 
   beforeEach(() => {
     useChatStore.getState().resetChatState()
@@ -46,16 +48,16 @@ describe('ChatWindow', () => {
     useChatStore.getState().resetChatState()
   })
 
-  it('adds assistant message from successful REST completion', async () => {
-    mockCreateCompletion.mockResolvedValue({
-      choices: [
-        {
-          message: {
-            role: 'assistant',
-            content: 'assistant response',
-          },
-        },
-      ],
+  it('streams assistant response token by token', async () => {
+    mockStreamCompletion.mockImplementation(async (_request, options) => {
+      options?.onDelta?.('assistant ')
+      options?.onDelta?.('response')
+      options?.onDone?.()
+
+      return {
+        hasChunks: true,
+        content: 'assistant response',
+      }
     })
 
     render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
@@ -68,14 +70,16 @@ describe('ChatWindow', () => {
       expect(screen.getByText('assistant response')).toBeInTheDocument()
     })
 
-    expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+    expect(mockStreamCompletion).toHaveBeenCalledTimes(1)
+    expect(mockCreateCompletion).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Отправить сообщение' })).toBeInTheDocument()
   })
 
   it('stops active request and restores input state', async () => {
-    mockCreateCompletion.mockImplementation(
-      (_request, signal) =>
+    mockStreamCompletion.mockImplementation(
+      (_request, options) =>
         new Promise((_, reject) => {
+          const signal = options?.signal
           if (!signal) {
             return
           }
@@ -91,7 +95,7 @@ describe('ChatWindow', () => {
     sendMessage('stop me')
 
     await waitFor(() => {
-      expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+      expect(mockStreamCompletion).toHaveBeenCalledTimes(1)
     })
 
     const stopButton = screen.getByRole('button', { name: 'Остановить генерацию' })
@@ -105,15 +109,46 @@ describe('ChatWindow', () => {
     expect(screen.queryByText('assistant response')).not.toBeInTheDocument()
   })
 
-  it('shows error message when backend request fails', async () => {
-    mockCreateCompletion.mockRejectedValue(new Error('Backend unavailable'))
+  it('falls back to REST when stream fails before first chunk', async () => {
+    mockStreamCompletion.mockRejectedValue(new Error('Stream is unavailable'))
+    mockCreateCompletion.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: 'fallback answer',
+          },
+        },
+      ],
+    })
 
     render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
 
     sendMessage('hello')
 
     await waitFor(() => {
-      expect(screen.getByRole('alert')).toHaveTextContent('Backend unavailable')
+      expect(screen.getByText('fallback answer')).toBeInTheDocument()
     })
+
+    expect(mockStreamCompletion).toHaveBeenCalledTimes(1)
+    expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+  })
+
+  it('keeps partial content and shows error on mid-stream failure', async () => {
+    mockStreamCompletion.mockImplementation(async (_request, options) => {
+      options?.onDelta?.('partial answer')
+      throw new Error('Stream interrupted')
+    })
+
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+
+    sendMessage('hello')
+
+    await waitFor(() => {
+      expect(screen.getByText('partial answer')).toBeInTheDocument()
+    })
+
+    expect(screen.getByRole('alert')).toHaveTextContent('Stream interrupted')
+    expect(mockCreateCompletion).not.toHaveBeenCalled()
   })
 })

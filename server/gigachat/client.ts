@@ -61,9 +61,47 @@ export class GigaChatClient {
     return parseJson(response, 'Failed to parse completion response from GigaChat')
   }
 
-  private async request(path: string, init: RequestInit): Promise<Response> {
+  public async createCompletionStream(
+    payload: CompletionPayload,
+    signal?: AbortSignal,
+  ): Promise<Response> {
+    const response = await this.request(
+      '/chat/completions',
+      {
+        method: 'POST',
+        headers: {
+          Accept: 'text/event-stream',
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(payload),
+      },
+      signal,
+    )
+
+    const contentType = response.headers.get('Content-Type')?.toLowerCase() ?? ''
+    if (!contentType.includes('text/event-stream')) {
+      const text = await safeReadText(response)
+      throw new AppError(
+        502,
+        'UPSTREAM_STREAM_UNAVAILABLE',
+        text || 'GigaChat did not return an event stream',
+      )
+    }
+
+    if (!response.body) {
+      throw new AppError(
+        502,
+        'UPSTREAM_STREAM_UNAVAILABLE',
+        'GigaChat stream response body is empty',
+      )
+    }
+
+    return response
+  }
+
+  private async request(path: string, init: RequestInit, signal?: AbortSignal): Promise<Response> {
     const firstToken = await this.tokenProvider.getAccessToken()
-    const firstResponse = await this.fetchAuthorized(path, init, firstToken)
+    const firstResponse = await this.fetchAuthorized(path, init, firstToken, signal)
 
     if (firstResponse.status !== 401) {
       if (!firstResponse.ok) {
@@ -77,7 +115,7 @@ export class GigaChatClient {
     this.tokenProvider.invalidate()
 
     const refreshedToken = await this.tokenProvider.getAccessToken(true)
-    const retryResponse = await this.fetchAuthorized(path, init, refreshedToken)
+    const retryResponse = await this.fetchAuthorized(path, init, refreshedToken, signal)
 
     if (!retryResponse.ok) {
       throw await mapUpstreamError(retryResponse)
@@ -86,13 +124,19 @@ export class GigaChatClient {
     return retryResponse
   }
 
-  private async fetchAuthorized(path: string, init: RequestInit, accessToken: string): Promise<Response> {
+  private async fetchAuthorized(
+    path: string,
+    init: RequestInit,
+    accessToken: string,
+    signal?: AbortSignal,
+  ): Promise<Response> {
     const headers = new Headers(init.headers)
     headers.set('Authorization', `Bearer ${accessToken}`)
 
     return this.fetcher(`${this.env.gigachatApiUrl}${path}`, {
       ...init,
       headers,
+      signal,
     })
   }
 }
