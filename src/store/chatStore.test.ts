@@ -104,6 +104,17 @@ describe('chatStore', () => {
     )
   })
 
+  it('builds concise auto title from first phrase before punctuation', () => {
+    const state = useChatStore.getState()
+    const chatId = state.createChat()
+
+    state.applyAutoTitle(chatId, 'кто на картинке, у нее есть хвост и усы? расскажи подробно')
+
+    expect(useChatStore.getState().chats.find((chat) => chat.id === chatId)?.title).toBe(
+      'кто на картинке',
+    )
+  })
+
   it('does not overwrite manual title by auto title', () => {
     const state = useChatStore.getState()
     const newChatId = state.createChat()

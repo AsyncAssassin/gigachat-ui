@@ -54,24 +54,25 @@ export function ChatWindow({ chat, onOpenSettings, onCreateChat }: ChatWindowPro
             <EmptyState />
           )
         ) : (
-          <EmptyState />
+          <div className={styles.noChatState}>
+            <EmptyState />
+            <Button variant="secondary" className={styles.startChatButton} onClick={onCreateChat}>
+              Создать чат, чтобы начать
+            </Button>
+          </div>
         )}
       </div>
 
-      <div className={styles.footer}>
-        {chat ? <ErrorMessage message={chatSession.error} /> : null}
-        {chat ? (
+      {chat ? (
+        <div className={styles.footer}>
+          <ErrorMessage message={chatSession.error} />
           <InputArea
             isLoading={isLoading}
             onSend={chatSession.sendMessage}
             onStop={chatSession.stopGeneration}
           />
-        ) : (
-          <Button variant="secondary" onClick={onCreateChat}>
-            Создать чат, чтобы начать
-          </Button>
-        )}
-      </div>
+        </div>
+      ) : null}
     </section>
   )
 }

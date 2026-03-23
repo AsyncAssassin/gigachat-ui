@@ -5,7 +5,7 @@
   border-radius: 12px;
   padding: 10px;
   display: grid;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
 }
 
@@ -15,21 +15,17 @@
 }
 
 .main {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  align-items: flex-start;
-  gap: 8px;
+  display: block;
   min-width: 0;
 }
 
 .title {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
   line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  min-width: 0;
-  flex: 1;
+  display: block;
 }
 
 .titleInput {
@@ -46,17 +42,16 @@
 .date {
   color: var(--color-text-muted);
   font-size: 0.78rem;
-  flex-shrink: 0;
-  text-align: right;
-  min-width: 56px;
+  line-height: 1;
+  margin-right: 2px;
 }
 
 .metaRight {
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  gap: 6px;
-  flex-shrink: 0;
-  min-width: 0;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 24px;
 }
 
 .preview {
@@ -64,9 +59,11 @@
   color: var(--color-text-muted);
   font-size: 0.84rem;
   line-height: 1.35;
+  max-height: calc(1.35em * 3);
+  margin-top: 2px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
