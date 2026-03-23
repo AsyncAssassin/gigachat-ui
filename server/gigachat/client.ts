@@ -7,6 +7,7 @@ import { OAuthTokenProvider } from './auth'
 export interface ChatMessagePayload {
   role: 'system' | 'user' | 'assistant'
   content: string
+  attachments?: string[]
 }
 
 export interface CompletionPayload {
@@ -17,6 +18,12 @@ export interface CompletionPayload {
   max_tokens?: number
   repetition_penalty?: number
   stream?: boolean
+}
+
+export interface UploadFilePayload {
+  bytes: Uint8Array
+  mimeType: string
+  fileName: string
 }
 
 export class GigaChatClient {
@@ -59,6 +66,33 @@ export class GigaChatClient {
     })
 
     return parseJson(response, 'Failed to parse completion response from GigaChat')
+  }
+
+  public async uploadFile(payload: UploadFilePayload): Promise<{ id: string }> {
+    const formData = new FormData()
+    const blob = new Blob([payload.bytes], { type: payload.mimeType })
+    formData.append('file', blob, payload.fileName)
+    formData.append('purpose', 'general')
+
+    const response = await this.request('/files', {
+      method: 'POST',
+      headers: {
+        Accept: 'application/json',
+      },
+      body: formData,
+    })
+
+    const result = await parseJson(response, 'Failed to parse file upload response from GigaChat')
+    if (!result || typeof result !== 'object') {
+      throw new AppError(502, 'UPSTREAM_INVALID_JSON', 'Invalid file upload response from GigaChat')
+    }
+
+    const fileId = (result as { id?: unknown }).id
+    if (typeof fileId !== 'string' || fileId.length === 0) {
+      throw new AppError(502, 'UPSTREAM_INVALID_JSON', 'GigaChat upload response does not contain file id')
+    }
+
+    return { id: fileId }
   }
 
   public async createCompletionStream(

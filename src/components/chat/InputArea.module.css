@@ -4,9 +4,17 @@
   display: grid;
   gap: 8px;
   grid-template-columns: auto 1fr auto;
+  grid-template-areas:
+    "attach input submit"
+    "preview preview preview"
+    "error error error";
   align-items: end;
   background: var(--color-surface);
   width: 100%;
+}
+
+.area textarea {
+  grid-area: input;
 }
 
 .area textarea {
@@ -24,12 +32,60 @@
   min-height: 40px;
 }
 
+.attachButton {
+  grid-area: attach;
+}
+
+.submitButton {
+  grid-area: submit;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.attachment {
+  grid-area: preview;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: var(--color-surface-elevated);
+  padding: 8px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.attachmentName {
+  font-size: 0.86rem;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.removeAttachmentBtn {
+  min-width: 30px;
+  min-height: 30px;
+}
+
+.attachmentError {
+  grid-area: error;
+  margin: 0;
+  color: var(--color-danger, #c62828);
+  font-size: 0.82rem;
+}
+
 @media (max-width: 767px) {
   .area {
     grid-template-columns: 1fr auto;
+    grid-template-areas:
+      "input submit"
+      "preview preview"
+      "error error";
   }
 
-  .area > :first-child {
+  .attachButton {
     display: none;
   }
 }

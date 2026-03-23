@@ -244,6 +244,85 @@ describe('server routes', () => {
     })
   })
 
+  it('POST /api/chat/completions validates attachment mime type', async () => {
+    const fetcher = createFetchMock([])
+    const app = createApp({ env: createTestEnv(), fetcher })
+
+    const response = await request(app)
+      .post('/api/chat/completions')
+      .send({
+        model: 'GigaChat',
+        messages: [{ role: 'user', content: 'Что на изображении?' }],
+        attachments: [
+          {
+            mimeType: 'image/gif',
+            fileName: 'bad.gif',
+            base64: 'Zm9v',
+          },
+        ],
+      })
+
+    expect(response.status).toBe(400)
+    expect(response.body.error.code).toBe('INVALID_REQUEST')
+    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/chat/completions uploads attachment and injects file id into last user message', async () => {
+    const fetcher = createFetchMock([
+      jsonResponse({ access_token: 'token-1', expires_at: Date.now() + 60_000 * 10 }),
+      jsonResponse({ id: 'file-123' }),
+      jsonResponse({
+        choices: [
+          {
+            message: {
+              role: 'assistant',
+              content: 'На изображении кот.',
+            },
+          },
+        ],
+      }),
+    ])
+
+    const app = createApp({ env: createTestEnv(), fetcher })
+    const response = await request(app)
+      .post('/api/chat/completions')
+      .send({
+        model: 'GigaChat',
+        messages: [
+          { role: 'system', content: 'Ты помощник' },
+          { role: 'user', content: 'Опиши изображение' },
+        ],
+        attachments: [
+          {
+            mimeType: 'image/png',
+            fileName: 'cat.png',
+            base64: 'aW1hZ2UtYmluYXJ5',
+          },
+        ],
+        stream: false,
+      })
+
+    expect(response.status).toBe(200)
+    expect(fetcher).toHaveBeenCalledTimes(3)
+
+    const uploadCall = (fetcher as unknown as { mock: { calls: Array<[string, RequestInit]> } }).mock.calls[1]
+    expect(uploadCall?.[0]).toBe('https://api.example.test/api/v1/files')
+    const uploadBody = uploadCall?.[1].body as FormData
+    expect(uploadBody).toBeInstanceOf(FormData)
+    expect(uploadBody.get('purpose')).toBe('general')
+    expect(uploadBody.get('file')).toBeTruthy()
+
+    const completionCall = (fetcher as unknown as { mock: { calls: Array<[string, RequestInit]> } }).mock.calls[2]
+    expect(completionCall?.[0]).toBe('https://api.example.test/api/v1/chat/completions')
+    const completionBody = JSON.parse(String(completionCall?.[1].body)) as {
+      attachments?: unknown
+      messages: Array<{ role: string; content: string; attachments?: string[] }>
+    }
+
+    expect(completionBody.attachments).toBeUndefined()
+    expect(completionBody.messages[1]?.attachments).toEqual(['file-123'])
+  })
+
   it('logger output does not leak auth key or bearer token in streaming path', async () => {
     const { logger, logs } = createLoggerSpy()
     const fetcher = createFetchMock([

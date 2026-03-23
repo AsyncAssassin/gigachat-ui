@@ -5,12 +5,18 @@ import {
   streamGigaChatCompletion,
 } from '../api/gigachat'
 import { useChatStore } from '../store/chatStore'
+import type { ImageAttachmentInput } from '../types/attachment'
 import type { Message } from '../types/message'
 
 interface UseChatSessionOptions {
   activeChatId: string | null
   messages: Message[]
   isLoading: boolean
+}
+
+interface SendMessageInput {
+  text: string
+  attachments?: ImageAttachmentInput[]
 }
 
 function generateId(): string {
@@ -48,11 +54,13 @@ export function useChatSession({ activeChatId, messages, isLoading }: UseChatSes
   }, [activeChatId])
 
   const sendMessage = useCallback(
-    async (text: string) => {
+    async (input: string | SendMessageInput) => {
       if (!activeChatId || isLoading) {
         return
       }
 
+      const text = typeof input === 'string' ? input : input.text
+      const attachments = typeof input === 'string' ? [] : (input.attachments ?? [])
       const currentChatId = activeChatId
       const existingMessages = [...messages]
       const userMessage: Message = {
@@ -96,6 +104,7 @@ export function useChatSession({ activeChatId, messages, isLoading }: UseChatSes
         max_tokens: settings.maxTokens,
         repetition_penalty: settings.repetitionPenalty,
         stream: true,
+        attachments: attachments.length > 0 ? attachments : undefined,
       }
 
       let assistantMessageId: string | null = null
