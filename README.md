@@ -1,21 +1,22 @@
 # GigaChat UI (Frontend Homework)
 
-Учебный интерфейс чата на React + TypeScript + Vite.
+Учебный интерфейс чата на React + TypeScript + Vite + local backend-proxy для GigaChat.
 
 ## Текущий статус проекта
 
-Проект адаптирован под домашние задания 4 и 5.
+Проект адаптирован под итоговое задание с реальной REST-интеграцией GigaChat через локальный сервер.
 
 Реализовано:
 
-- локальное состояние сообщений в `ChatWindow` через `useState`
+- централизованное состояние чатов/сообщений/настроек через Zustand
 - `isLoading` и `TypingIndicator` во время ожидания ответа
-- имитация ответа ассистента через `setTimeout` (1-2 секунды)
+- реальный запрос к `POST /api/chat/completions` через backend-proxy
+- получение моделей через `GET /api/models` (с fallback списком на фронте)
 - хранение истории и loading отдельно по `chatId` при переключении чатов
 - `InputArea` как контролируемая форма
 - отправка по кнопке и по `Enter`, перенос строки по `Shift+Enter`
 - запрет отправки пустой или пробельной строки
-- кнопка `Стоп` вместо `Отправить` во время генерации
+- кнопка `Стоп` вместо `Отправить` во время генерации (`AbortController`)
 - кнопка `Копировать` для сообщений ассистента
 - состояние `Скопировано` на 2 секунды после успешного копирования
 - автоскролл к последнему сообщению (`useRef` + `useEffect`)
@@ -27,6 +28,8 @@
 - боковая панель чатов (создать, выбрать, удалить, редактировать)
 - markdown-рендеринг сообщений (`react-markdown` + `remark-gfm`)
 - панель настроек
+- server-side OAuth токен-кеш с принудительным refresh при `401`
+- единый backend error envelope
 
 ## Стек и версии
 
@@ -56,23 +59,41 @@ npm test
 
 ```bash
 npm install
-npm run dev
+npm run dev:all
 ```
 
-Приложение будет доступно на `http://localhost:5173`.
+Frontend: `http://localhost:5173`  
+Backend: `http://localhost:8787`
 
 ## Скрипты
 
 ```bash
 npm run dev
+npm run dev:server
+npm run dev:all
+npm run start:server
 npm run lint
 npm run test
+npm run test:server
 npm run test:watch
 npm run build
+npm run typecheck:server
 npm run preview
 npm run security:secrets
 npm run security:secrets:staged
 ```
+
+## Backend env
+
+1. Скопируйте шаблон:
+
+```bash
+cp server/.env.example server/.env
+```
+
+2. Заполните `GIGACHAT_AUTH_KEY` и `GIGACHAT_SCOPE` в `server/.env`.
+
+Ключ хранится только на сервере и не передается на фронт.
 
 ## Security Baseline
 
@@ -99,5 +120,5 @@ brew install gitleaks
 
 ## Ограничения текущего этапа
 
-- нет реального backend/LLM API (используются моки и таймеры)
+- streaming/SSE режим перенесен в следующий PR (в этом этапе только REST)
 - история не сохраняется после перезагрузки страницы (runtime-only)

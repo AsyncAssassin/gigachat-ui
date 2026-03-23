@@ -1,8 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { X } from 'lucide-react'
+import { fetchGigaChatModels } from '../../api/gigachat'
 import { modelOptions } from '../../mocks/settings'
 import type { ChatSettings } from '../../types/settings'
 import { Button } from '../ui/Button'
+import { ErrorMessage } from '../ui/ErrorMessage'
 import { Slider } from '../ui/Slider'
 import { Toggle } from '../ui/Toggle'
 import styles from './SettingsPanel.module.css'
@@ -21,6 +23,55 @@ export function SettingsPanel({
   onReset,
 }: SettingsPanelProps) {
   const [draft, setDraft] = useState<ChatSettings>(settings)
+  const [models, setModels] = useState(modelOptions)
+  const [loadError, setLoadError] = useState<string | null>(null)
+
+  useEffect(() => {
+    const controller = new AbortController()
+
+    const loadModels = async () => {
+      try {
+        const loadedModels = await fetchGigaChatModels(controller.signal)
+        if (loadedModels.length === 0) {
+          setModels(modelOptions)
+          return
+        }
+
+        setModels(
+          loadedModels.map((modelName) => ({
+            value: modelName,
+            label: modelName,
+          })),
+        )
+        setLoadError(null)
+      } catch (error) {
+        if (error instanceof DOMException && error.name === 'AbortError') {
+          return
+        }
+
+        setModels(modelOptions)
+        setLoadError('Не удалось загрузить модели, использован fallback список.')
+      }
+    }
+
+    void loadModels()
+
+    return () => {
+      controller.abort()
+    }
+  }, [])
+
+  const availableModelOptions = useMemo(() => {
+    const hasCurrentModel = models.some((option) => option.value === draft.model)
+    if (hasCurrentModel) {
+      return models
+    }
+
+    return [
+      { value: draft.model, label: `${draft.model} (текущее)` },
+      ...models,
+    ]
+  }, [models, draft.model])
 
   return (
     <>
@@ -49,13 +100,15 @@ export function SettingsPanel({
               }))
             }
           >
-            {modelOptions.map((option) => (
+            {availableModelOptions.map((option) => (
               <option key={option.value} value={option.value}>
                 {option.label}
               </option>
             ))}
           </select>
         </label>
+
+        <ErrorMessage message={loadError} />
 
         <Slider
           label="Temperature"
@@ -90,6 +143,20 @@ export function SettingsPanel({
             }
           />
         </label>
+
+        <Slider
+          label="Repetition Penalty"
+          min={0}
+          max={10}
+          step={0.1}
+          value={draft.repetitionPenalty}
+          onChange={(repetitionPenalty) =>
+            setDraft((prev) => ({
+              ...prev,
+              repetitionPenalty,
+            }))
+          }
+        />
 
         <label className={styles.field}>
           <span>System Prompt</span>

@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
-import { AuthForm } from './components/auth/AuthForm'
 import { AppLayout } from './components/layout/AppLayout'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import type { ChatSettings } from './types/settings'
 import { selectActiveChat, useChatStore } from './store/chatStore'
 
 export default function App() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
   const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
 
@@ -45,10 +43,6 @@ export default function App() {
     }
   }, [isSidebarOpen, isSettingsOpen])
 
-  const handleLogin = () => {
-    setIsAuthenticated(true)
-  }
-
   const handleCreateChat = () => {
     createChat()
     setIsSidebarOpen(false)
@@ -69,10 +63,6 @@ export default function App() {
 
   const handleResetSettings = (): ChatSettings => {
     return resetSettings()
-  }
-
-  if (!isAuthenticated) {
-    return <AuthForm onLogin={handleLogin} />
   }
 
   return (
