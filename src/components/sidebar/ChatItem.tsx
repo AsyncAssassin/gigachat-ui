@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { Pencil, Trash2 } from 'lucide-react'
 import type { Chat } from '../../types/chat'
 import { formatDateLabel } from '../../utils/formatDateLabel'
@@ -8,7 +9,7 @@ interface ChatItemProps {
   chat: Chat
   isActive: boolean
   onSelect: (chatId: string) => void
-  onEdit: (chatId: string) => void
+  onEdit: (chatId: string, title: string) => void
   onDelete: (chatId: string) => void
 }
 
@@ -19,14 +20,59 @@ export function ChatItem({
   onEdit,
   onDelete,
 }: ChatItemProps) {
+  const [isEditing, setIsEditing] = useState(false)
+  const [draftTitle, setDraftTitle] = useState(chat.title)
+  const titleInputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!isEditing) {
+      return
+    }
+
+    const input = titleInputRef.current
+    if (input) {
+      input.focus()
+      input.select()
+    }
+  }, [isEditing])
+
+  const saveTitle = () => {
+    const nextTitle = draftTitle.trim().replace(/\s+/g, ' ').slice(0, 80)
+    setIsEditing(false)
+
+    if (!nextTitle) {
+      setDraftTitle(chat.title)
+      return
+    }
+
+    if (nextTitle !== chat.title) {
+      onEdit(chat.id, nextTitle)
+    }
+  }
+
+  const cancelEdit = () => {
+    setDraftTitle(chat.title)
+    setIsEditing(false)
+  }
+
   return (
     <div
       className={styles.item}
       data-active={isActive}
       role="button"
       tabIndex={0}
-      onClick={() => onSelect(chat.id)}
+      onClick={() => {
+        if (isEditing) {
+          return
+        }
+
+        onSelect(chat.id)
+      }}
       onKeyDown={(event) => {
+        if (isEditing) {
+          return
+        }
+
         if (event.key === 'Enter' || event.key === ' ') {
           event.preventDefault()
           onSelect(chat.id)
@@ -34,7 +80,31 @@ export function ChatItem({
       }}
     >
       <div className={styles.main}>
-        <strong className={styles.title}>{chat.title}</strong>
+        {isEditing ? (
+          <input
+            ref={titleInputRef}
+            className={styles.titleInput}
+            value={draftTitle}
+            maxLength={80}
+            onClick={(event) => event.stopPropagation()}
+            onChange={(event) => setDraftTitle(event.target.value)}
+            onBlur={saveTitle}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                saveTitle()
+              }
+
+              if (event.key === 'Escape') {
+                event.preventDefault()
+                cancelEdit()
+              }
+            }}
+          />
+        ) : (
+          <strong className={styles.title}>{chat.title}</strong>
+        )}
+
         <span className={styles.date}>{formatDateLabel(chat.lastMessageAt)}</span>
       </div>
 
@@ -49,7 +119,8 @@ export function ChatItem({
           aria-label="Переименовать чат"
           onClick={(event) => {
             event.stopPropagation()
-            onEdit(chat.id)
+            setDraftTitle(chat.title)
+            setIsEditing(true)
           }}
         />
         <Button

@@ -21,6 +21,7 @@ const chatOne: Chat = {
   title: 'Chat One',
   lastMessage: 'Start',
   lastMessageAt: new Date().toISOString(),
+  isTitleManual: false,
 }
 
 function sendMessage(text: string) {
@@ -73,6 +74,37 @@ describe('ChatWindow', () => {
     expect(mockStreamCompletion).toHaveBeenCalledTimes(1)
     expect(mockCreateCompletion).not.toHaveBeenCalled()
     expect(screen.getByRole('button', { name: 'Отправить сообщение' })).toBeInTheDocument()
+  })
+
+  it('applies auto-title from first user message for new chat', async () => {
+    const createdChatId = useChatStore.getState().createChat()
+    const createdChat = useChatStore.getState().chats.find((chat) => chat.id === createdChatId)
+
+    if (!createdChat) {
+      throw new Error('Expected created chat')
+    }
+
+    mockStreamCompletion.mockImplementation(async (_request, options) => {
+      options?.onDelta?.('ok')
+      options?.onDone?.()
+
+      return {
+        hasChunks: true,
+        content: 'ok',
+      }
+    })
+
+    render(<ChatWindow chat={createdChat} onOpenSettings={vi.fn()} />)
+
+    sendMessage('   Первый   запрос   для   автоназвания ')
+
+    await waitFor(() => {
+      expect(screen.getByText('ok')).toBeInTheDocument()
+    })
+
+    const updatedChat = useChatStore.getState().chats.find((chat) => chat.id === createdChatId)
+    expect(updatedChat?.title).toBe('Первый запрос для автоназвания')
+    expect(updatedChat?.isTitleManual).toBe(false)
   })
 
   it('stops active request and restores input state', async () => {

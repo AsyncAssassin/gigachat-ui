@@ -11,6 +11,7 @@ export default function App() {
   const chats = useChatStore((state) => state.chats)
   const activeChatId = useChatStore((state) => state.activeChatId)
   const activeChat = useChatStore(selectActiveChat)
+  const messagesByChat = useChatStore((state) => state.messagesByChat)
   const settings = useChatStore((state) => state.settings)
 
   const createChat = useChatStore((state) => state.createChat)
@@ -52,8 +53,8 @@ export default function App() {
     deleteChat(chatId)
   }
 
-  const handleEditChat = (chatId: string) => {
-    renameChat(chatId)
+  const handleEditChat = (chatId: string, title: string) => {
+    renameChat(chatId, title)
   }
 
   const handleSaveSettings = (nextSettings: ChatSettings) => {
@@ -71,6 +72,7 @@ export default function App() {
         chats={chats}
         activeChatId={activeChatId}
         activeChat={activeChat}
+        messagesByChat={messagesByChat}
         isSidebarOpen={isSidebarOpen}
         onOpenSidebar={() => setIsSidebarOpen(true)}
         onCloseSidebar={() => setIsSidebarOpen(false)}

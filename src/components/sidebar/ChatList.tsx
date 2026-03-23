@@ -6,7 +6,7 @@ interface ChatListProps {
   chats: Chat[]
   activeChatId: string | null
   onSelectChat: (chatId: string) => void
-  onEditChat: (chatId: string) => void
+  onEditChat: (chatId: string, title: string) => void
   onDeleteChat: (chatId: string) => void
 }
 

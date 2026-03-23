@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { PanelLeftClose, Plus } from 'lucide-react'
 import type { Chat } from '../../types/chat'
+import type { Message } from '../../types/message'
 import { Button } from '../ui/Button'
 import { ChatList } from './ChatList'
 import { SearchInput } from './SearchInput'
@@ -9,17 +10,19 @@ import styles from './Sidebar.module.css'
 interface SidebarProps {
   chats: Chat[]
   activeChatId: string | null
+  messagesByChat: Record<string, Message[]>
   isMobileOpen: boolean
   onCloseMobile: () => void
   onSelectChat: (chatId: string) => void
   onCreateChat: () => void
-  onEditChat: (chatId: string) => void
+  onEditChat: (chatId: string, title: string) => void
   onDeleteChat: (chatId: string) => void
 }
 
 export function Sidebar({
   chats,
   activeChatId,
+  messagesByChat,
   isMobileOpen,
   onCloseMobile,
   onSelectChat,
@@ -28,13 +31,27 @@ export function Sidebar({
   onDeleteChat,
 }: SidebarProps) {
   const [searchQuery, setSearchQuery] = useState('')
+  const [pendingDeleteChatId, setPendingDeleteChatId] = useState<string | null>(null)
+
+  const pendingDeleteChat = pendingDeleteChatId
+    ? chats.find((chat) => chat.id === pendingDeleteChatId) ?? null
+    : null
 
   const filteredChats = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase()
-    if (!query) return chats
+    const query = normalizeSearch(searchQuery)
+    if (!query) {
+      return chats
+    }
 
-    return chats.filter((chat) => chat.title.toLowerCase().includes(query))
-  }, [chats, searchQuery])
+    return chats.filter((chat) => {
+      if (normalizeSearch(chat.title).includes(query)) {
+        return true
+      }
+
+      const messages = messagesByChat[chat.id] ?? []
+      return messages.some((message) => normalizeSearch(message.content).includes(query))
+    })
+  }, [chats, messagesByChat, searchQuery])
 
   return (
     <div className={styles.root}>
@@ -67,9 +84,52 @@ export function Sidebar({
           activeChatId={activeChatId}
           onSelectChat={onSelectChat}
           onEditChat={onEditChat}
-          onDeleteChat={onDeleteChat}
+          onDeleteChat={(chatId) => setPendingDeleteChatId(chatId)}
         />
+
+        {filteredChats.length === 0 ? (
+          <p className={styles.emptySearch}>Ничего не найдено</p>
+        ) : null}
       </aside>
+
+      {pendingDeleteChat ? (
+        <div className={styles.dialogOverlay} role="presentation">
+          <div
+            className={styles.dialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-chat-title"
+          >
+            <h3 id="delete-chat-title">Удалить чат?</h3>
+            <p>
+              Чат "{pendingDeleteChat.title}" будет удалён без возможности восстановления.
+            </p>
+            <div className={styles.dialogActions}>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setPendingDeleteChatId(null)
+                }}
+              >
+                Отмена
+              </Button>
+              <Button
+                variant="danger"
+                onClick={() => {
+                  onDeleteChat(pendingDeleteChat.id)
+                  setPendingDeleteChatId(null)
+                }}
+              >
+                Удалить
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   )
+}
+
+function normalizeSearch(value: string): string {
+  return value.toLowerCase().trim().replace(/\s+/g, ' ')
 }
