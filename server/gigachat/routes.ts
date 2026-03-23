@@ -1,3 +1,4 @@
+import type { Request, Response } from 'express'
 import { Router } from 'express'
 import { z } from 'zod'
 import { AppError, getHttpStatus, toErrorEnvelope } from '../lib/errors'
@@ -42,20 +43,18 @@ export function createGigaChatRouter(options: { client: GigaChatClient; logger: 
       return
     }
 
-    if (parseResult.data.stream) {
-      response.status(400).json(
-        toErrorEnvelope(
-          new AppError(
-            400,
-            'STREAM_NOT_SUPPORTED_IN_PR2',
-            'Streaming is not supported in PR-2. Use stream=false.',
-          ),
-        ),
-      )
-      return
-    }
-
     try {
+      if (parseResult.data.stream) {
+        await proxyStream({
+          client,
+          logger,
+          payload: parseResult.data,
+          request,
+          response,
+        })
+        return
+      }
+
       const payload = await client.createCompletion(parseResult.data)
       response.status(200).json(payload)
     } catch (error) {
@@ -76,4 +75,102 @@ function getErrorCode(error: unknown): string {
   }
 
   return 'INTERNAL_ERROR'
+}
+
+async function proxyStream(options: {
+  client: GigaChatClient
+  logger: Logger
+  payload: z.infer<typeof completionPayloadSchema>
+  request: Request
+  response: Response
+}) {
+  const { client, logger, payload, request, response } = options
+  const upstreamController = new AbortController()
+
+  const handleRequestAborted = () => {
+    upstreamController.abort()
+  }
+
+  const handleResponseClose = () => {
+    if (!response.writableEnded) {
+      upstreamController.abort()
+    }
+  }
+
+  request.on('aborted', handleRequestAborted)
+  response.on('close', handleResponseClose)
+
+  try {
+    const upstream = await client.createCompletionStream(payload, upstreamController.signal)
+    const upstreamBody = upstream.body
+
+    if (!upstreamBody) {
+      throw new AppError(
+        502,
+        'UPSTREAM_STREAM_UNAVAILABLE',
+        'GigaChat stream response body is empty',
+      )
+    }
+
+    response.status(200)
+    response.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+    response.setHeader('Cache-Control', 'no-cache')
+    response.setHeader('Connection', 'keep-alive')
+    response.setHeader('X-Accel-Buffering', 'no')
+    response.flushHeaders?.()
+
+    const reader = upstreamBody.getReader()
+
+    try {
+      while (true) {
+        if (upstreamController.signal.aborted || response.writableEnded) {
+          break
+        }
+
+        const { done, value } = await reader.read()
+
+        if (done) {
+          break
+        }
+
+        if (!value || value.length === 0) {
+          continue
+        }
+
+        response.write(Buffer.from(value))
+      }
+    } finally {
+      reader.releaseLock()
+    }
+
+    if (!response.writableEnded) {
+      response.end()
+    }
+  } catch (error) {
+    if (upstreamController.signal.aborted) {
+      if (!response.writableEnded) {
+        response.end()
+      }
+
+      return
+    }
+
+    logger.error('POST /api/chat/completions stream failed', {
+      status: getHttpStatus(error),
+      code: getErrorCode(error),
+    })
+
+    if (response.headersSent) {
+      if (!response.writableEnded) {
+        response.end()
+      }
+
+      return
+    }
+
+    response.status(getHttpStatus(error)).json(toErrorEnvelope(error))
+  } finally {
+    request.off('aborted', handleRequestAborted)
+    response.off('close', handleResponseClose)
+  }
 }

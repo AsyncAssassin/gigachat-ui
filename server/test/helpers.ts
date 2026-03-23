@@ -29,6 +29,26 @@ export function textResponse(body: string, status = 200): Response {
   })
 }
 
+export function sseResponse(events: string[], status = 200): Response {
+  const encoder = new TextEncoder()
+  const stream = new ReadableStream<Uint8Array>({
+    start(controller) {
+      for (const event of events) {
+        controller.enqueue(encoder.encode(event))
+      }
+
+      controller.close()
+    },
+  })
+
+  return new Response(stream, {
+    status,
+    headers: {
+      'Content-Type': 'text/event-stream; charset=utf-8',
+    },
+  })
+}
+
 export function createFetchMock(sequence: Array<Response | (() => Response)>): typeof fetch {
   let index = 0
 

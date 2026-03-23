@@ -1,8 +1,9 @@
 /** @vitest-environment node */
 import request from 'supertest'
+import type { Response as SuperAgentResponse } from 'superagent'
 import { createApp } from '../app'
 import type { Logger } from '../lib/logger'
-import { createFetchMock, createTestEnv, jsonResponse, textResponse } from './helpers'
+import { createFetchMock, createTestEnv, jsonResponse, sseResponse, textResponse } from './helpers'
 
 function createLoggerSpy() {
   const logs: string[] = []
@@ -20,6 +21,24 @@ function createLoggerSpy() {
   }
 
   return { logger, logs }
+}
+
+function parseStreamBody(
+  response: SuperAgentResponse,
+  callback: (error: Error | null, body: unknown) => void,
+) {
+  const stream = response as unknown as NodeJS.ReadableStream & {
+    setEncoding: (encoding: BufferEncoding) => void
+  }
+
+  let body = ''
+  stream.setEncoding('utf8')
+  stream.on('data', (chunk: string) => {
+    body += chunk
+  })
+  stream.on('end', () => {
+    callback(null, body)
+  })
 }
 
 describe('server routes', () => {
@@ -89,10 +108,40 @@ describe('server routes', () => {
     expect(fetcher).not.toHaveBeenCalled()
   })
 
-  it('POST /api/chat/completions rejects stream=true in PR-2', async () => {
-    const fetcher = createFetchMock([])
-    const app = createApp({ env: createTestEnv(), fetcher })
+  it('POST /api/chat/completions streams SSE response for stream=true', async () => {
+    const fetcher = createFetchMock([
+      jsonResponse({ access_token: 'token-1', expires_at: Date.now() + 60_000 * 10 }),
+      sseResponse([
+        'data: {"choices":[{"delta":{"content":"Hel"}}]}\n\n',
+        'data: {"choices":[{"delta":{"content":"lo"}}]}\n\n',
+        'data: [DONE]\n\n',
+      ]),
+    ])
 
+    const app = createApp({ env: createTestEnv(), fetcher })
+    const response = await request(app)
+      .post('/api/chat/completions')
+      .buffer(true)
+      .parse(parseStreamBody)
+      .send({
+        model: 'GigaChat',
+        messages: [{ role: 'user', content: 'Hi' }],
+        stream: true,
+      })
+
+    expect(response.status).toBe(200)
+    expect(response.headers['content-type']).toContain('text/event-stream')
+    expect(response.body).toContain('data: {"choices":[{"delta":{"content":"Hel"}}]}')
+    expect(response.body).toContain('data: [DONE]')
+  })
+
+  it('POST /api/chat/completions maps unavailable stream response to envelope', async () => {
+    const fetcher = createFetchMock([
+      jsonResponse({ access_token: 'token-1', expires_at: Date.now() + 60_000 * 10 }),
+      textResponse('upstream returned non-stream payload', 200),
+    ])
+
+    const app = createApp({ env: createTestEnv(), fetcher })
     const response = await request(app)
       .post('/api/chat/completions')
       .send({
@@ -101,15 +150,42 @@ describe('server routes', () => {
         stream: true,
       })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(502)
     expect(response.body).toEqual({
       error: {
-        code: 'STREAM_NOT_SUPPORTED_IN_PR2',
-        message: 'Streaming is not supported in PR-2. Use stream=false.',
-        status: 400,
+        code: 'UPSTREAM_STREAM_UNAVAILABLE',
+        message: 'upstream returned non-stream payload',
+        status: 502,
       },
     })
-    expect(fetcher).not.toHaveBeenCalled()
+  })
+
+  it('POST /api/chat/completions refreshes token once after upstream 401 for stream=true', async () => {
+    const fetcher = createFetchMock([
+      jsonResponse({ access_token: 'token-1', expires_at: Date.now() + 60_000 * 10 }),
+      textResponse('Unauthorized upstream', 401),
+      jsonResponse({ access_token: 'token-2', expires_at: Date.now() + 60_000 * 10 }),
+      sseResponse([
+        'data: {"choices":[{"delta":{"content":"Hello"}}]}\n\n',
+        'data: [DONE]\n\n',
+      ]),
+    ])
+
+    const app = createApp({ env: createTestEnv(), fetcher })
+    const response = await request(app)
+      .post('/api/chat/completions')
+      .buffer(true)
+      .parse(parseStreamBody)
+      .send({
+        model: 'GigaChat',
+        messages: [{ role: 'user', content: 'Hello' }],
+        stream: true,
+      })
+
+    expect(response.status).toBe(200)
+    expect(response.headers['content-type']).toContain('text/event-stream')
+    expect(response.body).toContain('data: {"choices":[{"delta":{"content":"Hello"}}]}')
+    expect(fetcher).toHaveBeenCalledTimes(4)
   })
 
   it('POST /api/chat/completions refreshes token once after upstream 401', async () => {
@@ -168,7 +244,7 @@ describe('server routes', () => {
     })
   })
 
-  it('logger output does not leak auth key or bearer token', async () => {
+  it('logger output does not leak auth key or bearer token in streaming path', async () => {
     const { logger, logs } = createLoggerSpy()
     const fetcher = createFetchMock([
       textResponse('auth failed', 401),
@@ -181,7 +257,13 @@ describe('server routes', () => {
       logger,
     })
 
-    await request(app).get('/api/models')
+    await request(app)
+      .post('/api/chat/completions')
+      .send({
+        model: 'GigaChat',
+        messages: [{ role: 'user', content: 'Hello' }],
+        stream: true,
+      })
 
     const combinedLogs = logs.join(' ')
     expect(combinedLogs).not.toContain(authKey)
