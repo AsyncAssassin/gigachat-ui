@@ -1,4 +1,5 @@
 import type { MessageRole } from '../types/message'
+import type { ImageAttachmentInput } from '../types/attachment'
 
 type CompletionMessageRole = MessageRole | 'system'
 export interface CompletionMessage {
@@ -14,6 +15,7 @@ export interface CompletionRequest {
   max_tokens: number
   repetition_penalty: number
   stream: boolean
+  attachments?: ImageAttachmentInput[]
 }
 
 export interface StreamCompletionResult {
