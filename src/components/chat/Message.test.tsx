@@ -55,4 +55,37 @@ describe('Message', () => {
     render(<Message message={userMessage} />)
     expect(screen.queryByRole('button', { name: 'Копировать' })).not.toBeInTheDocument()
   })
+
+  it('renders fenced code block with syntax highlight classes', () => {
+    const codeMessage: MessageType = {
+      ...assistantMessage,
+      content: '```js\nconst answer = 42\n```',
+    }
+
+    const { container } = render(<Message message={codeMessage} />)
+
+    const codeBlock = container.querySelector('code.hljs.language-js')
+    expect(codeBlock).toBeInTheDocument()
+    if (!codeBlock) {
+      throw new Error('Code block is not rendered')
+    }
+
+    expect(codeBlock.tagName.toLowerCase()).toBe('code')
+    expect(codeBlock.className).toContain('hljs')
+    expect(codeBlock.className).toContain('language-js')
+    expect(codeBlock.closest('pre')).toBeInTheDocument()
+  })
+
+  it('keeps inline code rendering without breaking markdown', () => {
+    const inlineCodeMessage: MessageType = {
+      ...assistantMessage,
+      content: 'Use `npm run dev:all` to start app.',
+    }
+
+    render(<Message message={inlineCodeMessage} />)
+
+    const inlineCode = screen.getByText('npm run dev:all')
+    expect(inlineCode.tagName.toLowerCase()).toBe('code')
+    expect(inlineCode.closest('pre')).not.toBeInTheDocument()
+  })
 })

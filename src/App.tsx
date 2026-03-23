@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { AppErrorBoundary } from './components/app/AppErrorBoundary'
 import { AppLayout } from './components/layout/AppLayout'
 import { SettingsPanel } from './components/settings/SettingsPanel'
 import type { ChatSettings } from './types/settings'
@@ -66,33 +67,41 @@ export default function App() {
     return resetSettings()
   }
 
+  const handleResetUi = () => {
+    setIsSidebarOpen(false)
+    setIsSettingsOpen(false)
+    useChatStore.getState().hydrateFromStorage()
+  }
+
   return (
-    <>
-      <AppLayout
-        chats={chats}
-        activeChatId={activeChatId}
-        activeChat={activeChat}
-        messagesByChat={messagesByChat}
-        isSidebarOpen={isSidebarOpen}
-        onOpenSidebar={() => setIsSidebarOpen(true)}
-        onCloseSidebar={() => setIsSidebarOpen(false)}
-        onSelectChat={(chatId) => {
-          selectChat(chatId)
-          setIsSidebarOpen(false)
-        }}
-        onCreateChat={handleCreateChat}
-        onDeleteChat={handleDeleteChat}
-        onEditChat={handleEditChat}
-        onOpenSettings={() => setIsSettingsOpen(true)}
-      />
-      {isSettingsOpen ? (
-        <SettingsPanel
-          settings={settings}
-          onClose={() => setIsSettingsOpen(false)}
-          onSave={handleSaveSettings}
-          onReset={handleResetSettings}
+    <AppErrorBoundary onResetUi={handleResetUi}>
+      <>
+        <AppLayout
+          chats={chats}
+          activeChatId={activeChatId}
+          activeChat={activeChat}
+          messagesByChat={messagesByChat}
+          isSidebarOpen={isSidebarOpen}
+          onOpenSidebar={() => setIsSidebarOpen(true)}
+          onCloseSidebar={() => setIsSidebarOpen(false)}
+          onSelectChat={(chatId) => {
+            selectChat(chatId)
+            setIsSidebarOpen(false)
+          }}
+          onCreateChat={handleCreateChat}
+          onDeleteChat={handleDeleteChat}
+          onEditChat={handleEditChat}
+          onOpenSettings={() => setIsSettingsOpen(true)}
         />
-      ) : null}
-    </>
+        {isSettingsOpen ? (
+          <SettingsPanel
+            settings={settings}
+            onClose={() => setIsSettingsOpen(false)}
+            onSave={handleSaveSettings}
+            onReset={handleResetSettings}
+          />
+        ) : null}
+      </>
+    </AppErrorBoundary>
   )
 }

@@ -89,6 +89,87 @@
   font-size: 0.86rem;
 }
 
+.inlineCode {
+  background: color-mix(in srgb, var(--color-bg) 60%, #0000);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 1px 5px;
+}
+
+.codeBlock {
+  background: color-mix(in srgb, var(--color-bg) 70%, #0000);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  padding: 10px;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.blockCode {
+  display: block;
+  color: var(--color-text);
+  background: transparent;
+}
+
+.blockCode :global(.hljs-comment),
+.blockCode :global(.hljs-quote) {
+  color: color-mix(in srgb, var(--color-text-muted) 90%, #6b7280 10%);
+}
+
+.blockCode :global(.hljs-keyword),
+.blockCode :global(.hljs-selector-tag),
+.blockCode :global(.hljs-literal),
+.blockCode :global(.hljs-name),
+.blockCode :global(.hljs-strong) {
+  color: #0369a1;
+}
+
+[data-theme='dark'] .blockCode :global(.hljs-keyword),
+[data-theme='dark'] .blockCode :global(.hljs-selector-tag),
+[data-theme='dark'] .blockCode :global(.hljs-literal),
+[data-theme='dark'] .blockCode :global(.hljs-name),
+[data-theme='dark'] .blockCode :global(.hljs-strong) {
+  color: #38bdf8;
+}
+
+.blockCode :global(.hljs-string),
+.blockCode :global(.hljs-title),
+.blockCode :global(.hljs-section),
+.blockCode :global(.hljs-attribute),
+.blockCode :global(.hljs-type),
+.blockCode :global(.hljs-built_in),
+.blockCode :global(.hljs-bullet),
+.blockCode :global(.hljs-addition),
+.blockCode :global(.hljs-symbol) {
+  color: #047857;
+}
+
+[data-theme='dark'] .blockCode :global(.hljs-string),
+[data-theme='dark'] .blockCode :global(.hljs-title),
+[data-theme='dark'] .blockCode :global(.hljs-section),
+[data-theme='dark'] .blockCode :global(.hljs-attribute),
+[data-theme='dark'] .blockCode :global(.hljs-type),
+[data-theme='dark'] .blockCode :global(.hljs-built_in),
+[data-theme='dark'] .blockCode :global(.hljs-bullet),
+[data-theme='dark'] .blockCode :global(.hljs-addition),
+[data-theme='dark'] .blockCode :global(.hljs-symbol) {
+  color: #34d399;
+}
+
+.blockCode :global(.hljs-number),
+.blockCode :global(.hljs-link),
+.blockCode :global(.hljs-meta),
+.blockCode :global(.hljs-regexp) {
+  color: #b45309;
+}
+
+[data-theme='dark'] .blockCode :global(.hljs-number),
+[data-theme='dark'] .blockCode :global(.hljs-link),
+[data-theme='dark'] .blockCode :global(.hljs-meta),
+[data-theme='dark'] .blockCode :global(.hljs-regexp) {
+  color: #f59e0b;
+}
+
 .copyBtn {
   position: absolute;
   right: 8px;
