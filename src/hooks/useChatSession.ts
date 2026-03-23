@@ -19,6 +19,8 @@ interface SendMessageInput {
   attachments?: ImageAttachmentInput[]
 }
 
+const PREFERRED_IMAGE_MODEL = 'GigaChat-2-Pro'
+
 function generateId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
@@ -61,6 +63,7 @@ export function useChatSession({ activeChatId, messages, isLoading }: UseChatSes
 
       const text = typeof input === 'string' ? input : input.text
       const attachments = typeof input === 'string' ? [] : (input.attachments ?? [])
+      const requestModel = attachments.length > 0 ? PREFERRED_IMAGE_MODEL : settings.model
       const currentChatId = activeChatId
       const existingMessages = [...messages]
       const userMessage: Message = {
@@ -84,7 +87,7 @@ export function useChatSession({ activeChatId, messages, isLoading }: UseChatSes
       const controller = new AbortController()
       abortByChatRef.current[currentChatId] = controller
       const requestPayload = {
-        model: settings.model,
+        model: requestModel,
         messages: [
           {
             role: 'system' as const,
