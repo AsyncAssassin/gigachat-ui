@@ -40,6 +40,46 @@ const messagesByChat: Record<string, Message[]> = {
 }
 
 describe('Sidebar', () => {
+  it('shows empty state when there are no chats', () => {
+    render(
+      <Sidebar
+        chats={[]}
+        activeChatId={null}
+        messagesByChat={{}}
+        isMobileOpen={false}
+        onCloseMobile={vi.fn()}
+        onSelectChat={vi.fn()}
+        onCreateChat={vi.fn()}
+        onEditChat={vi.fn()}
+        onDeleteChat={vi.fn()}
+      />,
+    )
+
+    expect(screen.getByText('Чатов пока нет')).toBeInTheDocument()
+    expect(screen.queryByText('Ничего не найдено')).not.toBeInTheDocument()
+  })
+
+  it('shows not-found state only for non-empty search query', () => {
+    render(
+      <Sidebar
+        chats={chats}
+        activeChatId="chat-1"
+        messagesByChat={messagesByChat}
+        isMobileOpen={false}
+        onCloseMobile={vi.fn()}
+        onSelectChat={vi.fn()}
+        onCreateChat={vi.fn()}
+        onEditChat={vi.fn()}
+        onDeleteChat={vi.fn()}
+      />,
+    )
+
+    expect(screen.queryByText('Ничего не найдено')).not.toBeInTheDocument()
+
+    fireEvent.change(screen.getByPlaceholderText('Поиск чата'), { target: { value: 'zzz' } })
+    expect(screen.getByText('Ничего не найдено')).toBeInTheDocument()
+  })
+
   it('searches chats by title and message content', () => {
     render(
       <Sidebar

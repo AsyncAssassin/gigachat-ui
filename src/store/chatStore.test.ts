@@ -62,29 +62,29 @@ describe('chatStore', () => {
     const state = useChatStore.getState()
     const initialCount = state.chats.length
 
-    const newChatId = state.createChat()
+    const firstChatId = state.createChat()
+    const secondChatId = state.createChat()
     const next = useChatStore.getState()
 
-    expect(next.chats).toHaveLength(initialCount + 1)
-    expect(next.chats[0]?.id).toBe(newChatId)
+    expect(next.chats).toHaveLength(initialCount + 2)
+    expect(next.chats[0]?.id).toBe(secondChatId)
     expect(next.chats[0]?.title).toBe('Новый чат')
     expect(next.chats[0]?.isTitleManual).toBe(false)
-    expect(next.activeChatId).toBe(newChatId)
+    expect(next.activeChatId).toBe(secondChatId)
 
-    next.selectChat('chat-2')
-    expect(useChatStore.getState().activeChatId).toBe('chat-2')
+    next.selectChat(firstChatId)
+    expect(useChatStore.getState().activeChatId).toBe(firstChatId)
   })
 
   it('renames chat only with non-empty title and marks it as manual', () => {
     const state = useChatStore.getState()
+    const chatId = state.createChat()
 
-    state.renameChat('chat-1', '   ')
-    expect(useChatStore.getState().chats.find((chat) => chat.id === 'chat-1')?.title).toBe(
-      'React roadmap for junior frontend dev',
-    )
+    state.renameChat(chatId, '   ')
+    expect(useChatStore.getState().chats.find((chat) => chat.id === chatId)?.title).toBe('Новый чат')
 
-    state.renameChat('chat-1', 'Новый заголовок')
-    const renamed = useChatStore.getState().chats.find((chat) => chat.id === 'chat-1')
+    state.renameChat(chatId, 'Новый заголовок')
+    const renamed = useChatStore.getState().chats.find((chat) => chat.id === chatId)
     expect(renamed?.title).toBe('Новый заголовок')
     expect(renamed?.isTitleManual).toBe(true)
   })
@@ -118,18 +118,19 @@ describe('chatStore', () => {
 
   it('deletes chat with related loading and messages state', () => {
     const state = useChatStore.getState()
+    const chatId = state.createChat()
     const message = createMessage()
 
-    state.selectChat('chat-1')
-    state.addMessage('chat-1', message)
-    state.setChatLoading('chat-1', true)
-    state.deleteChat('chat-1')
+    state.selectChat(chatId)
+    state.addMessage(chatId, message)
+    state.setChatLoading(chatId, true)
+    state.deleteChat(chatId)
 
     const next = useChatStore.getState()
 
-    expect(next.chats.some((chat) => chat.id === 'chat-1')).toBe(false)
-    expect(next.messagesByChat['chat-1']).toBeUndefined()
-    expect(next.isLoadingByChat['chat-1']).toBeUndefined()
+    expect(next.chats.some((chat) => chat.id === chatId)).toBe(false)
+    expect(next.messagesByChat[chatId]).toBeUndefined()
+    expect(next.isLoadingByChat[chatId]).toBeUndefined()
     expect(next.activeChatId).toBe(next.chats[0]?.id ?? null)
   })
 
@@ -175,8 +176,8 @@ describe('chatStore', () => {
     useChatStore.getState().resetChatState()
 
     const next = useChatStore.getState()
-    expect(next.chats.length).toBeGreaterThan(0)
-    expect(next.activeChatId).toBe(next.chats[0]?.id ?? null)
+    expect(next.chats).toEqual([])
+    expect(next.activeChatId).toBeNull()
   })
 
   it('migrates legacy snapshot without isTitleManual', () => {

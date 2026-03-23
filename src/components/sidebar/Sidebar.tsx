@@ -53,6 +53,9 @@ export function Sidebar({
     })
   }, [chats, messagesByChat, searchQuery])
 
+  const hasChats = chats.length > 0
+  const hasSearchQuery = normalizeSearch(searchQuery).length > 0
+
   return (
     <div className={styles.root}>
       <div
@@ -87,7 +90,8 @@ export function Sidebar({
           onDeleteChat={(chatId) => setPendingDeleteChatId(chatId)}
         />
 
-        {filteredChats.length === 0 ? (
+        {!hasChats ? <p className={styles.emptySearch}>Чатов пока нет</p> : null}
+        {hasChats && filteredChats.length === 0 && hasSearchQuery ? (
           <p className={styles.emptySearch}>Ничего не найдено</p>
         ) : null}
       </aside>
