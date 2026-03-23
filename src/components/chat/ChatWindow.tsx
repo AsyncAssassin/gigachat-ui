@@ -42,6 +42,7 @@ export function ChatWindow({ chat, onOpenSettings }: ChatWindowProps) {
   const settings = useChatStore((state) => state.settings)
 
   const addMessage = useChatStore((state) => state.addMessage)
+  const applyAutoTitle = useChatStore((state) => state.applyAutoTitle)
   const setChatLoading = useChatStore((state) => state.setChatLoading)
   const updateMessage = useChatStore((state) => state.updateMessage)
   const updateChatPreview = useChatStore((state) => state.updateChatPreview)
@@ -76,6 +77,7 @@ export function ChatWindow({ chat, onOpenSettings }: ChatWindowProps) {
     }
 
     addMessage(currentChatId, userMessage)
+    applyAutoTitle(currentChatId, userMessage.content)
     updateChatPreview(currentChatId, userMessage.content, userMessage.timestamp)
     setChatLoading(currentChatId, true)
     setError(null)

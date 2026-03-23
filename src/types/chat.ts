@@ -3,4 +3,5 @@ export interface Chat {
   title: string
   lastMessage: string
   lastMessageAt: string
+  isTitleManual: boolean
 }

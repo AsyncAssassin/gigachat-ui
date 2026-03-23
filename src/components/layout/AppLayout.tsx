@@ -1,5 +1,6 @@
 import { Menu } from 'lucide-react'
 import type { Chat } from '../../types/chat'
+import type { Message } from '../../types/message'
 import { ChatWindow } from '../chat/ChatWindow'
 import { Sidebar } from '../sidebar/Sidebar'
 import { Button } from '../ui/Button'
@@ -9,12 +10,13 @@ interface AppLayoutProps {
   chats: Chat[]
   activeChatId: string | null
   activeChat: Chat | null
+  messagesByChat: Record<string, Message[]>
   isSidebarOpen: boolean
   onOpenSidebar: () => void
   onCloseSidebar: () => void
   onSelectChat: (chatId: string) => void
   onCreateChat: () => void
-  onEditChat: (chatId: string) => void
+  onEditChat: (chatId: string, title: string) => void
   onDeleteChat: (chatId: string) => void
   onOpenSettings: () => void
 }
@@ -23,6 +25,7 @@ export function AppLayout({
   chats,
   activeChatId,
   activeChat,
+  messagesByChat,
   isSidebarOpen,
   onOpenSidebar,
   onCloseSidebar,
@@ -49,6 +52,7 @@ export function AppLayout({
         <Sidebar
           chats={chats}
           activeChatId={activeChatId}
+          messagesByChat={messagesByChat}
           isMobileOpen={isSidebarOpen}
           onCloseMobile={onCloseSidebar}
           onSelectChat={onSelectChat}
