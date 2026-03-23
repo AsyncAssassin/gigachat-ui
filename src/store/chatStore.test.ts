@@ -95,10 +95,12 @@ describe('chatStore', () => {
       ...defaultSettings,
       temperature: 0.2,
       topP: 0.8,
+      repetitionPenalty: 1.2,
     })
 
     expect(useChatStore.getState().settings.temperature).toBe(0.2)
     expect(useChatStore.getState().settings.topP).toBe(0.8)
+    expect(useChatStore.getState().settings.repetitionPenalty).toBe(1.2)
 
     const reset = state.resetSettings()
 

@@ -1,18 +1,23 @@
-import { act, fireEvent, render, screen } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { createGigaChatCompletion } from '../../api/gigachat'
 import { useChatStore } from '../../store/chatStore'
 import type { Chat } from '../../types/chat'
 import { ChatWindow } from './ChatWindow'
 
+vi.mock('../../api/gigachat', () => ({
+  createGigaChatCompletion: vi.fn(),
+  extractAssistantTextFromCompletion: (payload: unknown) => {
+    const source = payload as {
+      choices?: Array<{ message?: { content?: string } }>
+    }
+
+    return source.choices?.[0]?.message?.content ?? ''
+  },
+}))
+
 const chatOne: Chat = {
   id: 'chat-1',
   title: 'Chat One',
-  lastMessage: 'Start',
-  lastMessageAt: new Date().toISOString(),
-}
-
-const chatTwo: Chat = {
-  id: 'chat-2',
-  title: 'Chat Two',
   lastMessage: 'Start',
   lastMessageAt: new Date().toISOString(),
 }
@@ -30,90 +35,85 @@ function sendMessage(text: string) {
 }
 
 describe('ChatWindow', () => {
+  const mockCreateCompletion = vi.mocked(createGigaChatCompletion)
+
   beforeEach(() => {
     useChatStore.getState().resetChatState()
-    vi.useFakeTimers()
+    vi.clearAllMocks()
   })
 
   afterEach(() => {
-    vi.runOnlyPendingTimers()
-    vi.useRealTimers()
     useChatStore.getState().resetChatState()
   })
 
-  it('keeps messages isolated by chat when switching during loading', () => {
-    const { rerender } = render(
-      <ChatWindow
-        chat={chatOne}
-        onOpenSettings={vi.fn()}
-      />,
-    )
-
-    sendMessage('first message')
-    expect(screen.getByText('first message')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeDisabled()
-
-    rerender(
-      <ChatWindow
-        chat={chatTwo}
-        onOpenSettings={vi.fn()}
-      />,
-    )
-
-    expect(screen.queryByText('first message')).not.toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeEnabled()
-
-    sendMessage('second message')
-    expect(screen.getByText('second message')).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeDisabled()
-
-    act(() => {
-      vi.advanceTimersByTime(2100)
+  it('adds assistant message from successful REST completion', async () => {
+    mockCreateCompletion.mockResolvedValue({
+      choices: [
+        {
+          message: {
+            role: 'assistant',
+            content: 'assistant response',
+          },
+        },
+      ],
     })
 
-    rerender(
-      <ChatWindow
-        chat={chatOne}
-        onOpenSettings={vi.fn()}
-      />,
-    )
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
 
-    expect(screen.getByText('first message')).toBeInTheDocument()
-    expect(screen.getByText(/Принял: "first message"/)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeEnabled()
+    sendMessage('hello')
 
-    rerender(
-      <ChatWindow
-        chat={chatTwo}
-        onOpenSettings={vi.fn()}
-      />,
-    )
+    expect(screen.getByText('hello')).toBeInTheDocument()
 
-    expect(screen.getByText('second message')).toBeInTheDocument()
-    expect(screen.getByText(/Принял: "second message"/)).toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeEnabled()
+    await waitFor(() => {
+      expect(screen.getByText('assistant response')).toBeInTheDocument()
+    })
+
+    expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+    expect(screen.getByRole('button', { name: 'Отправить сообщение' })).toBeInTheDocument()
   })
 
-  it('stops assistant generation for the active chat', () => {
-    render(
-      <ChatWindow
-        chat={chatOne}
-        onOpenSettings={vi.fn()}
-      />,
+  it('stops active request and restores input state', async () => {
+    mockCreateCompletion.mockImplementation(
+      (_request, signal) =>
+        new Promise((_, reject) => {
+          if (!signal) {
+            return
+          }
+
+          signal.addEventListener('abort', () => {
+            reject(new DOMException('Aborted', 'AbortError'))
+          })
+        }),
     )
 
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+
     sendMessage('stop me')
+
+    await waitFor(() => {
+      expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+    })
 
     const stopButton = screen.getByRole('button', { name: 'Остановить генерацию' })
     fireEvent.click(stopButton)
 
-    act(() => {
-      vi.advanceTimersByTime(2100)
+    await waitFor(() => {
+      expect(screen.getByRole('button', { name: 'Отправить сообщение' })).toBeInTheDocument()
     })
 
     expect(screen.getByText('stop me')).toBeInTheDocument()
-    expect(screen.queryByText(/Принял: "stop me"/)).not.toBeInTheDocument()
-    expect(screen.getByPlaceholderText('Напишите сообщение...')).toBeEnabled()
-    expect(screen.getByRole('button', { name: 'Отправить сообщение' })).toBeInTheDocument()
+    expect(screen.queryByText('assistant response')).not.toBeInTheDocument()
+  })
+
+  it('shows error message when backend request fails', async () => {
+    mockCreateCompletion.mockRejectedValue(new Error('Backend unavailable'))
+
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+
+    sendMessage('hello')
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Backend unavailable')
+    })
   })
 })

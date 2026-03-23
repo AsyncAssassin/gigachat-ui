@@ -1,16 +1,13 @@
 import type { ThemeMode } from './common'
 
-export type ModelId =
-  | 'gigachat'
-  | 'gigachat-plus'
-  | 'gigachat-pro'
-  | 'gigachat-max'
+export type ModelId = string
 
 export interface ChatSettings {
   model: ModelId
   temperature: number
   topP: number
   maxTokens: number
+  repetitionPenalty: number
   systemPrompt: string
   theme: ThemeMode
 }
