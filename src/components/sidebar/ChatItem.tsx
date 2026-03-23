@@ -59,6 +59,7 @@ export function ChatItem({
     <div
       className={styles.item}
       data-active={isActive}
+      data-editing={isEditing}
       role="button"
       tabIndex={0}
       onClick={() => {
