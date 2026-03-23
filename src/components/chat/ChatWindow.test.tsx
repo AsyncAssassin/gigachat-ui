@@ -61,7 +61,7 @@ describe('ChatWindow', () => {
       }
     })
 
-    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} onCreateChat={vi.fn()} />)
 
     sendMessage('hello')
 
@@ -94,7 +94,7 @@ describe('ChatWindow', () => {
       }
     })
 
-    render(<ChatWindow chat={createdChat} onOpenSettings={vi.fn()} />)
+    render(<ChatWindow chat={createdChat} onOpenSettings={vi.fn()} onCreateChat={vi.fn()} />)
 
     sendMessage('   Первый   запрос   для   автоназвания ')
 
@@ -122,7 +122,7 @@ describe('ChatWindow', () => {
         }),
     )
 
-    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} onCreateChat={vi.fn()} />)
 
     sendMessage('stop me')
 
@@ -154,7 +154,7 @@ describe('ChatWindow', () => {
       ],
     })
 
-    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} onCreateChat={vi.fn()} />)
 
     sendMessage('hello')
 
@@ -172,7 +172,7 @@ describe('ChatWindow', () => {
       throw new Error('Stream interrupted')
     })
 
-    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} onCreateChat={vi.fn()} />)
 
     sendMessage('hello')
 
@@ -199,7 +199,7 @@ describe('ChatWindow', () => {
 
     mockCreateCompletion.mockRejectedValueOnce(new Error('Completion request failed'))
 
-    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} onCreateChat={vi.fn()} />)
 
     sendMessage('first try')
 
@@ -216,5 +216,18 @@ describe('ChatWindow', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
     expect(mockStreamCompletion).toHaveBeenCalledTimes(2)
     expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+  })
+
+  it('shows create-chat CTA when no active chat is selected', () => {
+    const onCreateChat = vi.fn()
+
+    render(<ChatWindow chat={null} onOpenSettings={vi.fn()} onCreateChat={onCreateChat} />)
+
+    const createButton = screen.getByRole('button', { name: 'Создать чат, чтобы начать' })
+    expect(createButton).toBeInTheDocument()
+
+    fireEvent.click(createButton)
+    expect(onCreateChat).toHaveBeenCalledTimes(1)
+    expect(screen.queryByPlaceholderText('Напишите сообщение...')).not.toBeInTheDocument()
   })
 })

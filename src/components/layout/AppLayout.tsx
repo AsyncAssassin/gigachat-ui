@@ -64,6 +64,7 @@ export function AppLayout({
         <ChatWindow
           chat={activeChat}
           onOpenSettings={onOpenSettings}
+          onCreateChat={onCreateChat}
         />
       </div>
     </main>
