@@ -1,31 +1,38 @@
-# Demo Materials
+# Демо-материалы
 
-This folder contains submission-ready demo assets for homework review.
+В этой папке собираются материалы для сдачи итогового ДЗ преподавателю.
 
-## Video
+## Видео
 
-- Add a link to the final demo video in the root `README.md` (`Demo section`).
-- Recommended duration: 3–5 minutes.
+- Добавьте ссылку на итоговое видео-демо в корневой `README.md` (раздел про демо).
+- Рекомендуемая длительность: 3–5 минут.
 
-## Required screenshots
+## Обязательные скриншоты
 
-Place screenshots into `docs/demo/screenshots` with the following names:
+Сложите скриншоты в `docs/demo/screenshots` с такими именами:
 
-1. `01-chat-streaming.png` - streaming response in progress
-2. `02-stop-generation.png` - Stop action during generation
-3. `03-markdown-code-highlight.png` - markdown response with highlighted code block
-4. `04-sidebar-search.png` - search by message content in sidebar
-5. `05-rename-delete-confirm.png` - inline rename and delete confirmation dialog
-6. `06-persistence-reload.png` - state restored after page reload
-7. `07-settings-model-params.png` - settings panel with model and parameters
-8. `08-error-boundary-fallback.png` - runtime fallback screen (Error Boundary)
+1. `01-chat-streaming.png` — потоковая генерация в процессе.
+2. `02-stop-generation.png` — остановка генерации кнопкой `Стоп`.
+3. `03-markdown-code-highlight.png` — markdown-ответ с подсветкой кода.
+4. `04-sidebar-search.png` — поиск в sidebar по содержимому сообщений.
+5. `05-rename-delete-confirm.png` — inline rename и диалог подтверждения удаления.
+6. `06-persistence-reload.png` — восстановление состояния после перезагрузки.
+7. `07-settings-model-params.png` — настройки модели и параметров запроса.
+8. `08-error-boundary-fallback.png` — fallback-экран Error Boundary.
+9. `09-multimodal-image-question.png` — вопрос по прикрепленному изображению и ответ модели.
 
-## Recording scenario
+## Сценарий записи демо
 
-1. Create a new chat and send first message (show auto-title).
-2. Show token-by-token streaming and Stop.
-3. Ask for markdown with a code block and show highlight.
-4. Rename chat inline and run delete confirmation (cancel + confirm on another chat).
-5. Search a chat by message content.
-6. Reload page and confirm history/settings restore.
-7. Demonstrate Error Boundary fallback screen and UI reset.
+1. Создать новый чат и отправить первое сообщение (показать автоназвание).
+2. Показать генерацию токен за токеном и `Стоп`.
+3. Попросить ответ с markdown и блоком кода, показать подсветку.
+4. Переименовать чат, открыть удаление (показать `Отмена` и `Удалить`).
+5. Найти чат по фразе из текста сообщения.
+6. Перезагрузить страницу и показать восстановление истории/настроек.
+7. Показать fallback Error Boundary и восстановление UI.
+8. Прикрепить изображение, задать вопрос по нему и показать ответ (multimodal).
+
+## Плейсхолдеры перед финальной отправкой
+
+- [ ] Добавлена ссылка на видео в `README.md`.
+- [ ] Добавлены финальные скриншоты в `docs/demo/screenshots`.

@@ -1,5 +1,4 @@
 import { create } from 'zustand'
-import { mockChats } from '../mocks/chats'
 import { defaultSettings } from '../mocks/settings'
 import type { Chat } from '../types/chat'
 import type { Message } from '../types/message'
@@ -55,10 +54,6 @@ type PersistedSnapshotV1 = {
 export type ChatStore = ChatState & ChatActions
 
 let persistTimer: ReturnType<typeof setTimeout> | null = null
-
-function cloneChats(chats: Chat[]): Chat[] {
-  return chats.map((chat) => ({ ...chat }))
-}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null
@@ -260,8 +255,8 @@ function resolvePersistCandidate(value: Record<string, unknown>): Record<string,
 
 function buildInitialState(): ChatState {
   const baseState: ChatState = {
-    chats: cloneChats(mockChats),
-    activeChatId: mockChats[0]?.id ?? null,
+    chats: [],
+    activeChatId: null,
     settings: { ...defaultSettings },
     messagesByChat: {},
     isLoadingByChat: {},

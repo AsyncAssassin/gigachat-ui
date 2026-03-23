@@ -183,4 +183,38 @@ describe('ChatWindow', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('Stream interrupted')
     expect(mockCreateCompletion).not.toHaveBeenCalled()
   })
+
+  it('clears error and succeeds on retry via re-send', async () => {
+    mockStreamCompletion
+      .mockRejectedValueOnce(new Error('Stream unavailable'))
+      .mockImplementationOnce(async (_request, options) => {
+        options?.onDelta?.('retry success')
+        options?.onDone?.()
+
+        return {
+          hasChunks: true,
+          content: 'retry success',
+        }
+      })
+
+    mockCreateCompletion.mockRejectedValueOnce(new Error('Completion request failed'))
+
+    render(<ChatWindow chat={chatOne} onOpenSettings={vi.fn()} />)
+
+    sendMessage('first try')
+
+    await waitFor(() => {
+      expect(screen.getByRole('alert')).toHaveTextContent('Completion request failed')
+    })
+
+    sendMessage('second try')
+
+    await waitFor(() => {
+      expect(screen.getByText('retry success')).toBeInTheDocument()
+    })
+
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+    expect(mockStreamCompletion).toHaveBeenCalledTimes(2)
+    expect(mockCreateCompletion).toHaveBeenCalledTimes(1)
+  })
 })
