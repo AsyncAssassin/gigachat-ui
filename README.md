@@ -74,6 +74,7 @@ git config core.hooksPath .githooks
 | Fallback на REST при сбое старта стрима | fallback-ветка в `useChatSession` |
 | Параметры (`temperature`, `top_p`, `max_tokens`, `repetition_penalty`) | `SettingsPanel` + payload запроса |
 | Модели из API | `GET /api/models` + fallback список |
+| Multimodal: вопрос по изображению | `InputArea` (attach image) + backend upload `/files` + `messages[].attachments` |
 | Изоляция runtime-ошибок | `AppErrorBoundary` |
 
 ## Скрипты
@@ -96,6 +97,8 @@ npm run security:secrets:staged
 
 - Инструкция по демо и чек-лист скриншотов: [docs/demo/README.md](./docs/demo/README.md)
 - Папка для скриншотов: `docs/demo/screenshots`
+- Smoke-матрица критериев: [docs/submission/SMOKE-MATRIX.md](./docs/submission/SMOKE-MATRIX.md)
+- Чек-лист перед отправкой: [docs/submission/CHECKLIST.md](./docs/submission/CHECKLIST.md)
 - Перед отправкой добавьте ссылку на итоговое видео-демо в этот README.
 
 Рекомендуемый сценарий live-демо (3–5 минут):
@@ -107,6 +110,7 @@ npm run security:secrets:staged
 5. Показать inline rename + delete confirm.
 6. Перезагрузить страницу и показать восстановление истории.
 7. Показать fallback-экран Error Boundary и reset UI.
+8. Прикрепить изображение и показать ответ модели по изображению.
 
 ## Финальный чек-лист
 
@@ -114,6 +118,7 @@ npm run security:secrets:staged
 - [x] Обязательные критерии управления чатами выполнены.
 - [x] Реальная интеграция с GigaChat через локальный backend-proxy.
 - [x] Streaming + SSE + fallback на REST реализованы.
+- [x] Multimodal (изображение + вопрос) реализован.
 - [x] Секреты только на бэкенде, secret scan проходит.
 - [x] `lint`, `test`, `test:server`, `build` — зелёные.
 - [ ] Добавить финальные скриншоты и ссылку на видео перед отправкой преподавателю.
