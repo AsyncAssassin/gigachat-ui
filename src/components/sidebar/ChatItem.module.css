@@ -17,14 +17,19 @@
 .main {
   display: flex;
   justify-content: space-between;
+  align-items: flex-start;
   gap: 8px;
+  min-width: 0;
 }
 
 .title {
   font-size: 0.92rem;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
 }
 
 .titleInput {
@@ -42,6 +47,15 @@
   color: var(--color-text-muted);
   font-size: 0.78rem;
   flex-shrink: 0;
+  text-align: right;
+  min-width: 56px;
+}
+
+.metaRight {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
 }
 
 .preview {
@@ -57,16 +71,22 @@
 }
 
 .actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
   display: flex;
   gap: 4px;
   opacity: 0;
   transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .item:hover .actions,
 .item:focus-within .actions {
   opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
 }
