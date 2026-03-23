@@ -10,6 +10,7 @@
 npm install
 cp server/.env.example server/.env
 # заполните GIGACHAT_AUTH_KEY и GIGACHAT_SCOPE в server/.env
+# если сеть с TLS interception: укажите GIGACHAT_CA_CERT_PATH в server/.env
 npm run dev:all
 ```
 
@@ -34,6 +35,16 @@ git config core.hooksPath .githooks
 ```
 
 Подробнее: [SECURITY.md](./SECURITY.md)
+
+## TLS-сертификат (чистый запуск без `NODE_TLS_REJECT_UNAUTHORIZED=0`)
+
+Если при вызове GigaChat появляется ошибка `AUTH_NETWORK_ERROR` или `self-signed certificate in certificate chain`, добавьте доверенный CA сертификат в PEM и укажите путь в `server/.env`:
+
+```bash
+GIGACHAT_CA_CERT_PATH=/absolute/path/to/corporate-ca.pem
+```
+
+После изменения перезапустите backend.
 
 ## Production-пайплайн чата
 
