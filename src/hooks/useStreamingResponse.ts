@@ -6,6 +6,8 @@ import type {
   UseStreamingResponseResult,
 } from './types'
 
+// Non-production experimental hook kept for webinar/demo compatibility.
+// Production chat flow uses useChatSession.
 const INITIAL_METADATA: StreamMetadata = {
   startTime: null,
   endTime: null,

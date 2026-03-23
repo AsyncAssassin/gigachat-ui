@@ -5,6 +5,8 @@ import { buildMockAssistantReply, createMockEventSourceFactory, mockChatFetch } 
 import { Button } from '../ui/Button'
 import styles from './StreamingDemo.module.css'
 
+// Non-production demo component for isolated hook experiments.
+// It is not mounted in App and is excluded from the homework demo flow.
 export function StreamingDemo() {
   const [prompt, setPrompt] = useState('Show a short streamed summary about React hooks.')
   const [transport, setTransport] = useState<'fetch' | 'sse'>('fetch')

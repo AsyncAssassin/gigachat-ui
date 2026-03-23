@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import type { ChangeEvent, FormEvent } from 'react'
 import type { Message, UseChatOptions, UseChatResult } from './types'
 
+// Non-production experimental hook kept for webinar/demo compatibility.
+// Production chat flow uses useChatSession.
 function toError(error: unknown): Error {
   if (error instanceof Error) {
     return error
