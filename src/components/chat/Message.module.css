@@ -184,6 +184,10 @@
 }
 
 @media (hover: none) {
+  .row[data-role='assistant'] .bubble {
+    padding-bottom: 36px;
+  }
+
   .copyBtn {
     opacity: 1;
   }

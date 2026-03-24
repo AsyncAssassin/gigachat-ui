@@ -18,9 +18,19 @@
   background: var(--color-surface);
 }
 
+.header > div {
+  min-width: 0;
+}
+
 .header h2,
 .header p {
   margin: 0;
+}
+
+.header h2 {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .header p {
@@ -58,17 +68,23 @@
   background: var(--color-surface);
 }
 
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
   .header {
     padding: 10px 12px;
   }
 
   .header h2 {
-    font-size: 1rem;
+    font-size: 1.6rem;
   }
 
   .header button span:last-child {
     display: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .header h2 {
+    font-size: 1rem;
   }
 
   .noChatState {

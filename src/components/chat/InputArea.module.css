@@ -83,6 +83,7 @@
       "input submit"
       "preview preview"
       "error error";
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
   }
 
   .attachButton {
