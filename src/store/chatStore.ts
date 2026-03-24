@@ -9,6 +9,8 @@ const DEFAULT_CHAT_TITLE = 'Новый чат'
 const STORAGE_KEY = 'gigachat-ui.chat-state.v1'
 const PERSIST_VERSION = 1
 const PERSIST_DEBOUNCE_MS = 280
+const AUTO_TITLE_MAX_WORDS = 6
+const AUTO_TITLE_MAX_LENGTH = 48
 
 interface ChatState {
   chats: Chat[]
@@ -328,9 +330,11 @@ function buildAutoTitle(sourceText: string): string {
     return ''
   }
 
-  const words = normalized.split(' ').slice(0, 8)
+  const sentence = normalized.split(/[.!?\n]/).map((part) => part.trim()).find(Boolean) ?? normalized
+  const clause = sentence.split(/[,;:]/).map((part) => part.trim()).find(Boolean) ?? sentence
+  const words = clause.split(' ').slice(0, AUTO_TITLE_MAX_WORDS)
   const byWordLimit = words.join(' ')
-  const byLengthLimit = byWordLimit.slice(0, 60).trim()
+  const byLengthLimit = byWordLimit.slice(0, AUTO_TITLE_MAX_LENGTH).trim()
 
   return byLengthLimit
 }

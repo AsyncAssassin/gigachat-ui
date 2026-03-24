@@ -7,6 +7,7 @@ import { GigaChatClient } from './gigachat/client'
 import { createGigaChatRouter } from './gigachat/routes'
 import { AppError, toErrorEnvelope } from './lib/errors'
 import { createLogger, type Logger } from './lib/logger'
+import { createUpstreamFetch } from './lib/upstreamFetch'
 import type { FetchLike } from './types'
 
 interface CreateAppOptions {
@@ -18,7 +19,7 @@ interface CreateAppOptions {
 export function createApp(options: CreateAppOptions = {}) {
   const env = options.env ?? loadEnv()
   const logger = options.logger ?? createLogger()
-  const fetcher = options.fetcher ?? fetch
+  const fetcher = options.fetcher ?? createUpstreamFetch(env, logger)
 
   const tokenProvider = new OAuthTokenProvider({
     env,

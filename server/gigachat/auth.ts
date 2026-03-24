@@ -49,16 +49,30 @@ export class OAuthTokenProvider {
       scope: this.env.gigachatScope,
     })
 
-    const response = await this.fetcher(this.env.gigachatAuthUrl, {
-      method: 'POST',
-      headers: {
-        Authorization: `Basic ${this.env.gigachatAuthKey}`,
-        Accept: 'application/json',
-        'Content-Type': 'application/x-www-form-urlencoded',
-        RqUID: randomUUID(),
-      },
-      body,
-    })
+    let response: Response
+
+    try {
+      response = await this.fetcher(this.env.gigachatAuthUrl, {
+        method: 'POST',
+        headers: {
+          Authorization: `Basic ${this.env.gigachatAuthKey}`,
+          Accept: 'application/json',
+          'Content-Type': 'application/x-www-form-urlencoded',
+          RqUID: randomUUID(),
+        },
+        body,
+      })
+    } catch (error) {
+      this.logger.error('OAuth token request failed before response', {
+        reason: error instanceof Error ? error.message : 'unknown',
+      })
+
+      throw new AppError(
+        502,
+        'AUTH_NETWORK_ERROR',
+        'Failed to reach GigaChat OAuth endpoint (network or TLS certificate issue)',
+      )
+    }
 
     if (!response.ok) {
       this.logger.error('OAuth token request failed', { status: response.status })

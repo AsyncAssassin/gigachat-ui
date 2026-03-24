@@ -1,6 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react'
 import { createGigaChatCompletion, streamGigaChatCompletion } from '../../api/gigachat'
 import { useChatStore } from '../../store/chatStore'
+import type { ImageAttachmentInput } from '../../types/attachment'
 import { useChatSession } from '../useChatSession'
 
 vi.mock('../../api/gigachat', () => ({
@@ -133,5 +134,35 @@ describe('useChatSession', () => {
     expect(chatMessages.some((message) => message.content === 'partial answer')).toBe(true)
     expect(result.current.error).toBe('Stream interrupted')
     expect(mockCreateCompletion).not.toHaveBeenCalled()
+  })
+
+  it('uses GigaChat-2-Pro automatically when request has image attachment', async () => {
+    mockStreamCompletion.mockImplementation(async (_request, options) => {
+      options?.onDelta?.('image answer')
+      return { hasChunks: true, content: 'image answer' }
+    })
+
+    const { result } = renderSession()
+
+    const attachments: ImageAttachmentInput[] = [
+      {
+        fileName: 'cat.png',
+        mimeType: 'image/png',
+        base64: 'aW1hZ2UtYnl0ZXM=',
+      },
+    ]
+
+    await act(async () => {
+      await result.current.sendMessage({
+        text: 'Кто на картинке?',
+        attachments,
+      })
+    })
+
+    expect(mockStreamCompletion).toHaveBeenCalledTimes(1)
+    const firstRequest = mockStreamCompletion.mock.calls[0]?.[0]
+
+    expect(firstRequest?.model).toBe('GigaChat-2-Pro')
+    expect(firstRequest?.attachments).toEqual(attachments)
   })
 })

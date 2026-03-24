@@ -11,6 +11,7 @@ const envSchema = z.object({
   GIGACHAT_SCOPE: z.string().min(1, 'GIGACHAT_SCOPE is required'),
   GIGACHAT_AUTH_URL: z.string().url().default('https://ngw.devices.sberbank.ru:9443/api/v2/oauth'),
   GIGACHAT_API_URL: z.string().url().default('https://gigachat.devices.sberbank.ru/api/v1'),
+  GIGACHAT_CA_CERT_PATH: z.string().min(1).optional(),
 })
 
 export type ServerEnv = {
@@ -19,6 +20,7 @@ export type ServerEnv = {
   gigachatScope: string
   gigachatAuthUrl: string
   gigachatApiUrl: string
+  gigachatCaCertPath?: string
 }
 
 export function loadEnv(source: EnvSource = process.env): ServerEnv {
@@ -35,5 +37,6 @@ export function loadEnv(source: EnvSource = process.env): ServerEnv {
     gigachatScope: parsed.data.GIGACHAT_SCOPE,
     gigachatAuthUrl: parsed.data.GIGACHAT_AUTH_URL,
     gigachatApiUrl: parsed.data.GIGACHAT_API_URL,
+    gigachatCaCertPath: parsed.data.GIGACHAT_CA_CERT_PATH,
   }
 }

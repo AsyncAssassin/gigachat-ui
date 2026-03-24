@@ -16,9 +16,10 @@ import styles from './ChatWindow.module.css'
 interface ChatWindowProps {
   chat: Chat | null
   onOpenSettings: () => void
+  onCreateChat: () => void
 }
 
-export function ChatWindow({ chat, onOpenSettings }: ChatWindowProps) {
+export function ChatWindow({ chat, onOpenSettings, onCreateChat }: ChatWindowProps) {
   const activeChatId = chat?.id ?? null
   const messages = useChatStore(selectMessagesForChat(activeChatId))
   const isLoading = useChatStore(selectLoadingForChat(activeChatId))
@@ -53,19 +54,25 @@ export function ChatWindow({ chat, onOpenSettings }: ChatWindowProps) {
             <EmptyState />
           )
         ) : (
-          <EmptyState />
+          <div className={styles.noChatState}>
+            <EmptyState />
+            <Button variant="secondary" className={styles.startChatButton} onClick={onCreateChat}>
+              Создать чат, чтобы начать
+            </Button>
+          </div>
         )}
       </div>
 
-      <div className={styles.footer}>
-        <ErrorMessage message={chatSession.error} />
-        <InputArea
-          disabled={!chat}
-          isLoading={isLoading}
-          onSend={chatSession.sendMessage}
-          onStop={chatSession.stopGeneration}
-        />
-      </div>
+      {chat ? (
+        <div className={styles.footer}>
+          <ErrorMessage message={chatSession.error} />
+          <InputArea
+            isLoading={isLoading}
+            onSend={chatSession.sendMessage}
+            onStop={chatSession.stopGeneration}
+          />
+        </div>
+      ) : null}
     </section>
   )
 }

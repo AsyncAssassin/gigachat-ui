@@ -37,6 +37,19 @@
   overflow: hidden;
 }
 
+.noChatState {
+  width: 100%;
+  display: grid;
+  place-items: center;
+  align-content: start;
+  gap: 16px;
+  padding: min(14vh, 120px) 16px 16px;
+}
+
+.startChatButton {
+  width: min(520px, 100%);
+}
+
 .footer {
   display: grid;
   gap: 0.65rem;
@@ -56,5 +69,13 @@
 
   .header button span:last-child {
     display: none;
+  }
+
+  .noChatState {
+    padding-top: 32px;
+  }
+
+  .startChatButton {
+    width: 100%;
   }
 }

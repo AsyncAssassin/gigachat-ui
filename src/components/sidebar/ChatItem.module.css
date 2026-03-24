@@ -5,7 +5,10 @@
   border-radius: 12px;
   padding: 10px;
   display: grid;
-  gap: 8px;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  gap: 6px;
+  min-height: 116px;
   cursor: pointer;
 }
 
@@ -15,16 +18,17 @@
 }
 
 .main {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
+  display: block;
+  min-width: 0;
 }
 
 .title {
-  font-size: 0.92rem;
+  font-size: 0.95rem;
+  line-height: 1.25;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  display: block;
 }
 
 .titleInput {
@@ -41,7 +45,17 @@
 .date {
   color: var(--color-text-muted);
   font-size: 0.78rem;
-  flex-shrink: 0;
+  line-height: 1;
+  justify-self: start;
+  margin: 0;
+}
+
+.metaRight {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  min-height: 24px;
 }
 
 .preview {
@@ -49,24 +63,57 @@
   color: var(--color-text-muted);
   font-size: 0.84rem;
   line-height: 1.35;
+  max-height: calc(1.35em * 3);
+  margin-top: 2px;
   display: -webkit-box;
-  -webkit-line-clamp: 2;
-  line-clamp: 2;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
 
 .actions {
-  position: absolute;
-  top: 8px;
-  right: 8px;
-  display: flex;
+  display: inline-flex;
+  justify-content: flex-end;
+  min-width: 72px;
   gap: 4px;
   opacity: 0;
   transition: opacity 0.2s ease;
+  pointer-events: none;
 }
 
 .item:hover .actions,
-.item:focus-within .actions {
+.item:focus-visible .actions,
+.item:focus-within .actions,
+.item[data-active='true'] .actions,
+.item[data-editing='true'] .actions {
   opacity: 1;
+  pointer-events: auto;
+}
+
+@media (hover: none) {
+  .item[data-active='true'] .actions,
+  .item[data-editing='true'] .actions {
+    opacity: 1;
+    pointer-events: auto;
+  }
+}
+
+@media (max-width: 1023px) {
+  .item {
+    padding: 9px;
+    gap: 5px;
+    min-height: 104px;
+  }
+
+  .title {
+    font-size: 0.92rem;
+  }
+
+  .preview {
+    font-size: 0.82rem;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    max-height: calc(1.35em * 2);
+  }
 }

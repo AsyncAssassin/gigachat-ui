@@ -59,6 +59,7 @@ export function ChatItem({
     <div
       className={styles.item}
       data-active={isActive}
+      data-editing={isEditing}
       role="button"
       tabIndex={0}
       onClick={() => {
@@ -104,37 +105,39 @@ export function ChatItem({
         ) : (
           <strong className={styles.title}>{chat.title}</strong>
         )}
+      </div>
 
+      <div className={styles.metaRight}>
         <span className={styles.date}>{formatDateLabel(chat.lastMessageAt)}</span>
+
+        <div className={styles.actions}>
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<Pencil size={14} />}
+            aria-label="Переименовать чат"
+            onClick={(event) => {
+              event.stopPropagation()
+              setDraftTitle(chat.title)
+              setIsEditing(true)
+            }}
+          />
+          <Button
+            variant="ghost"
+            size="sm"
+            iconOnly
+            icon={<Trash2 size={14} />}
+            aria-label="Удалить чат"
+            onClick={(event) => {
+              event.stopPropagation()
+              onDelete(chat.id)
+            }}
+          />
+        </div>
       </div>
 
       <p className={styles.preview}>{chat.lastMessage}</p>
-
-      <div className={styles.actions}>
-        <Button
-          variant="ghost"
-          size="sm"
-          iconOnly
-          icon={<Pencil size={14} />}
-          aria-label="Переименовать чат"
-          onClick={(event) => {
-            event.stopPropagation()
-            setDraftTitle(chat.title)
-            setIsEditing(true)
-          }}
-        />
-        <Button
-          variant="ghost"
-          size="sm"
-          iconOnly
-          icon={<Trash2 size={14} />}
-          aria-label="Удалить чат"
-          onClick={(event) => {
-            event.stopPropagation()
-            onDelete(chat.id)
-          }}
-        />
-      </div>
     </div>
   )
 }
