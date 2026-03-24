@@ -6,4 +6,5 @@
   gap: 10px;
   overflow-y: auto;
   padding-right: 2px;
+  padding-bottom: calc(12px + env(safe-area-inset-bottom));
 }

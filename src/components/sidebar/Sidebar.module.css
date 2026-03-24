@@ -87,7 +87,7 @@
 
 @media (max-width: 1023px) and (min-width: 768px) {
   .sidebar {
-    max-width: 250px;
+    max-width: 240px;
   }
 }
 
@@ -112,7 +112,14 @@
     transform: translateX(0);
   }
 
+  .header {
+    justify-content: space-between;
+  }
+
   .closeBtn {
     display: inline-flex;
+    min-width: 40px;
+    min-height: 40px;
+    margin-left: auto;
   }
 }
