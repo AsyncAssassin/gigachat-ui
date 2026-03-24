@@ -43,13 +43,14 @@
   color: var(--color-text-muted);
   font-size: 0.78rem;
   line-height: 1;
-  margin-right: 2px;
+  justify-self: start;
+  margin: 0;
 }
 
 .metaRight {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto;
   align-items: center;
-  justify-content: flex-end;
   gap: 8px;
   min-height: 24px;
 }
@@ -69,18 +70,19 @@
 }
 
 .actions {
-  display: flex;
+  display: inline-flex;
+  justify-content: flex-end;
+  min-width: 72px;
   gap: 4px;
   opacity: 0;
-  visibility: hidden;
   transition: opacity 0.2s ease;
   pointer-events: none;
 }
 
 .item:hover .actions,
+.item[data-active='true'] .actions,
 .item[data-editing='true'] .actions {
   opacity: 1;
-  visibility: visible;
   pointer-events: auto;
 }
 
@@ -88,7 +90,6 @@
   .item[data-active='true'] .actions,
   .item[data-editing='true'] .actions {
     opacity: 1;
-    visibility: visible;
     pointer-events: auto;
   }
 }
