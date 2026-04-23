@@ -107,10 +107,10 @@ npm run security:secrets:staged
 ## Демо-материалы для сдачи
 
 - Инструкция по демо и чек-лист скриншотов: [docs/demo/README.md](./docs/demo/README.md)
+- Видео-демо: [Google Drive](https://drive.google.com/file/d/1KHsnz4mItOv7mCXiwuup_aZM_Ou6nda0/view?usp=sharing)
 - Папка для скриншотов: `docs/demo/screenshots`
 - Smoke-матрица критериев: [docs/submission/SMOKE-MATRIX.md](./docs/submission/SMOKE-MATRIX.md)
 - Чек-лист перед отправкой: [docs/submission/CHECKLIST.md](./docs/submission/CHECKLIST.md)
-- Перед отправкой добавьте ссылку на итоговое видео-демо в этот README.
 
 Рекомендуемый сценарий live-демо (3–5 минут):
 
@@ -132,4 +132,4 @@ npm run security:secrets:staged
 - [x] Multimodal (изображение + вопрос) реализован.
 - [x] Секреты только на бэкенде, secret scan проходит.
 - [x] `lint`, `test`, `test:server`, `build` — зелёные.
-- [ ] Добавить финальные скриншоты и ссылку на видео перед отправкой преподавателю.
+- [ ] Добавить финальные скриншоты перед отправкой преподавателю.
