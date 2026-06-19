@@ -52,7 +52,17 @@ export function useChatSession({ activeChatId, messages, isLoading }: UseChatSes
   }, [])
 
   useEffect(() => {
-    setError(null)
+    let isActive = true
+
+    queueMicrotask(() => {
+      if (isActive) {
+        setError(null)
+      }
+    })
+
+    return () => {
+      isActive = false
+    }
   }, [activeChatId])
 
   const sendMessage = useCallback(
