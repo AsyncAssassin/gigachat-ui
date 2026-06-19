@@ -1,5 +1,9 @@
 # Security Policy
 
+## Scope
+
+This is a personal demo project. There is no formal support SLA, but security issues should be reported privately before public disclosure.
+
 ## Secrets and Sensitive Data
 
 Do not commit secrets to this repository.
@@ -12,6 +16,10 @@ Examples of secrets:
 - Private SSH keys and API keys
 
 Use local `.env` files only. Keep only placeholders in `.env.example` files.
+
+Runtime credentials are backend-only. The frontend must call the local proxy and must not receive GigaChat credentials directly.
+
+For corporate TLS interception, use `GIGACHAT_CA_CERT_PATH` with a trusted PEM certificate instead of disabling TLS verification globally.
 
 ## Required Local Checks
 

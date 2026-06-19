@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+coverage
+*.tsbuildinfo
 *.local
 
 # Environment files (never commit real secrets)
@@ -31,3 +33,10 @@ server/.env.*
 *.sln
 *.sw?
 project_plan.md
+
+# Local Codex desktop scratch artifacts
+/images.jpeg
+/thread-context-inputs-*.js
+/use-global-state-*.js
+/worktree-*.js
+/worktrees-settings-page-*.js

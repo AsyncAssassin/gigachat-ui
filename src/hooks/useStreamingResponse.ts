@@ -434,15 +434,24 @@ export const useStreamingResponse = (
   }, [closeActiveConnections, flushThrottledData])
 
   useEffect(() => {
+    let isActive = true
+
     if (enabled) {
-      startStream().catch((streamError) => {
-        const normalizedError = toError(streamError)
-        setError(normalizedError)
-        onError?.(normalizedError)
+      queueMicrotask(() => {
+        if (!isActive) {
+          return
+        }
+
+        startStream().catch((streamError) => {
+          const normalizedError = toError(streamError)
+          setError(normalizedError)
+          onError?.(normalizedError)
+        })
       })
     }
 
     return () => {
+      isActive = false
       closeActiveConnections()
       flushThrottledData()
     }
